@@ -1,3 +1,4 @@
+
 import { synchronize } from '@nozbe/watermelondb/sync';
 import { database } from '../database';
 
@@ -46,3 +47,4 @@ export const syncDatabase = async (): Promise<void> => {
     throw error;
   }
 };
+

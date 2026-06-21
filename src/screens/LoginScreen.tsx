@@ -10,11 +10,11 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
-  Image, // 💡 1. Impor komponen Image dari react-native
+  Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Q } from '@nozbe/watermelondb';
-import SHA256 from 'crypto-js/sha256';
+import PBKDF2 from 'crypto-js/pbkdf2';
 import { saveUserSession } from '../services/authService';
 import { database } from '../database';
 import User from '../database/models/User';
@@ -38,7 +38,10 @@ export default function LoginScreen({ navigation, onLoginSuccess }: Props) {
     setIsLoading(true);
 
     try {
-      const hashedInput = SHA256(pin).toString();
+      const hashedInput = PBKDF2(pin, 'toko-intan-salt-2026', {
+        keySize: 256 / 32,
+        iterations: 10000,
+      }).toString();
       const usersCollection = database.get<User>('users');
       const users = await usersCollection
         .query(Q.where('email', email.toLowerCase().trim()))
@@ -70,21 +73,22 @@ export default function LoginScreen({ navigation, onLoginSuccess }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        
-        {/* HEADER VISUAL & LOGO */}
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.headerContainer}>
-          {/* 💡 2. Pasang Gambar Logo E-commerce di sini */}
-          <Image 
-            source={require('../assets/playstore.png')} // Sesuaikan dengan jalur file gambar Anda
+          <Image
+            source={require('../assets/playstore.png')}
             style={styles.logoImage}
             resizeMode="contain"
           />
           <Text style={styles.title}>Kasir Pintar</Text>
-          <Text style={styles.subtitle}>Mempermudah pengelolaan transaksi bisnis Anda</Text>
+          <Text style={styles.subtitle}>
+            Mempermudah pengelolaan transaksi bisnis Anda
+          </Text>
         </View>
 
-        {/* FORM CONTAINER */}
         <View style={styles.formContainer}>
           <Text style={styles.label}>Alamat Email</Text>
           <TextInput
@@ -105,14 +109,13 @@ export default function LoginScreen({ navigation, onLoginSuccess }: Props) {
             placeholderTextColor="#94A3B8"
             value={pin}
             onChangeText={setPin}
-            keyboardType="numeric"
-            maxLength={6}
+            maxLength={12}
             secureTextEntry
             onSubmitEditing={handleLogin}
           />
 
-          <TouchableOpacity 
-            style={[styles.button, isLoading && styles.buttonDisabled]} 
+          <TouchableOpacity
+            style={[styles.button, isLoading && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={isLoading}
           >
@@ -130,32 +133,16 @@ export default function LoginScreen({ navigation, onLoginSuccess }: Props) {
             </TouchableOpacity>
           </View>
         </View>
-
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  headerContainer: {
-    marginBottom: 28,
-    alignItems: 'center',
-  },
-  // 💡 3. Atur ukuran dan margin logo agar terlihat proporsional
-  logoImage: {
-    width: 90,
-    height: 90,
-    marginBottom: 16,
-  },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  scrollContainer: { flexGrow: 1, justifyContent: 'center', padding: 24 },
+  headerContainer: { marginBottom: 28, alignItems: 'center' },
+  logoImage: { width: 90, height: 90, marginBottom: 16 },
   title: {
     fontSize: 28,
     fontWeight: '800',
@@ -210,28 +197,9 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  buttonDisabled: {
-    backgroundColor: '#94A3B8',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  footerRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 24,
-  },
-  footerText: {
-    color: '#64748B',
-    fontSize: 14,
-  },
-  registerLink: {
-    color: '#2563EB',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  
+  buttonDisabled: { backgroundColor: '#94A3B8' },
+  buttonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  footerRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 24 },
+  footerText: { color: '#64748B', fontSize: 14 },
+  registerLink: { color: '#2563EB', fontSize: 14, fontWeight: '700' },
 });
-

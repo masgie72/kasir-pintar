@@ -2,21 +2,28 @@ import { Database } from '@nozbe/watermelondb';
 import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
 
 import schema from './schema';
+import migrations from './migrations';
 import Order from './models/Order';
 import OrderItem from './models/OrderItem';
 import Product from './models/Product';
-import User from './models/User'; // 1. Tambahkan import ini
-import migrations from './migrations';
+import User from './models/User';
 
 const adapter = new SQLiteAdapter({
   schema,
   migrations,
+  dbName: 'kasir_pintar',
   jsi: true,
+  onSetUpError: error => {
+    console.log('[DB] Setup Error:', error);
+    if (__DEV__) throw error;
+  },
 });
 
 export const database = new Database({
   adapter,
-  modelClasses: [Order, OrderItem, Product, User], // 2. Tambahkan User di sini
+  modelClasses: [Order, OrderItem, Product, User],
 });
 
-console.log('Database initialized:', !!database);
+if (__DEV__) {
+  console.log('Database initialized:', !!database);
+}

@@ -1,3 +1,4 @@
+
 import { database } from '../database';
 
 export const addProduct = async (name: string, price: number, stock: number) => {
@@ -22,6 +23,7 @@ export const deleteProduct = async (product: any) => {
     await product.destroyPermanently();
   });
 };
+
 
 
 

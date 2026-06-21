@@ -1,3 +1,4 @@
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const saveUserSession = async (userId: string) => {
@@ -10,4 +11,5 @@ export const getLoggedInUserId = async () => {
 
 export const logoutUser = async () => {
   await AsyncStorage.removeItem('user_session');
+
 };

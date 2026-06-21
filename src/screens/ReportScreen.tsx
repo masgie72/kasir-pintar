@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, Platform } from 'react-native';
 import { database } from '../database';
@@ -143,3 +144,4 @@ const styles = StyleSheet.create({
   emptyBox: { alignItems: 'center', marginTop: 40 },
   emptyText: { color: '#94A3B8', fontSize: 14, fontWeight: '500' }
 });
+

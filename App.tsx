@@ -1,45 +1,158 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, { useState, useEffect, Suspense } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ActivityIndicator, View } from 'react-native';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+const Stack = createNativeStackNavigator();
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+// 💡 SOLUSI INDUK: Ubah semua impor statis menjadi LAZY LOADING menggunakan React.lazy()
+// Cara ini menunda pemuatan file screen agar tidak merusak siklus inisialisasi React Hooks
+const HomeScreen = React.lazy(() => import('./src/screens/HomeScreen'));
+const HistoryScreen = React.lazy(() => import('./src/screens/HistoryScreen'));
+const OrderDetailScreen = React.lazy(
+  () => import('./src/screens/OrderDetailScreen'),
+);
+const ProductScreen = React.lazy(() => import('./src/screens/ProductScreen'));
+const ReportScreen = React.lazy(() => import('./src/screens/ReportScreen'));
+const LoginScreen = React.lazy(() => import('./src/screens/LoginScreen'));
+const EditProductScreen = React.lazy(
+  () => import('./src/screens/EditProductScreen'),
+);
+const RegisterScreen = React.lazy(() => import('./src/screens/RegisterScreen'));
+const SettingScreen = React.lazy(() => import('./src/screens/SettingScreen'));
+const PrinterSettingScreen = React.lazy(
+  () => import('./src/screens/PrinterSettingScreen'),
+);
+
+export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        // 💡 Muat database secara aman di dalam daur hidup asinkron
+        const { database } = require('./src/database');
+
+        if (database) {
+          console.log('Database siap digunakan di App.tsx');
+          const {
+            inisialisasiSuperUser: seedFunction,
+          } = require('./src/database/dbSeeder');
+          await (seedFunction as any)(database);
+        }
+
+        // Cek status login
+        const status = await AsyncStorage.getItem('isLoggedIn');
+        setIsLoggedIn(status === 'true');
+      } catch (error) {
+        console.error('Gagal menginisialisasi aplikasi:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeApp();
+  }, []);
+
+  // Tampilkan layar loading biru saat memproses inisialisasi aplikasi
+  if (isLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#F8FAFC',
+        }}
+      >
+        <ActivityIndicator size="large" color="#3B82F6" />
+      </View>
+    );
+  }
 
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
+    <NavigationContainer>
+      {/* 💡 Bungkus struktur Navigator dengan Suspense untuk menangani transisi Lazy Loading */}
+      <Suspense
+        fallback={
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: '#F8FAFC',
+            }}
+          >
+            <ActivityIndicator size="large" color="#3B82F6" />
+          </View>
+        }
+      >
+        <Stack.Navigator>
+          {isLoggedIn ? (
+            <>
+              <Stack.Screen name="Home" options={{ title: 'Kasir' }}>
+                {props => (
+                  <HomeScreen
+                    {...props}
+                    onLogoutSuccess={() => {
+                      console.log('Kasir berhasil keluar');
+                      setIsLoggedIn(false);
+                    }}
+                  />
+                )}
+              </Stack.Screen>
+              <Stack.Screen name="Product" component={ProductScreen} />
+              <Stack.Screen
+                name="History"
+                component={HistoryScreen}
+                options={{ title: 'Riwayat Transaksi' }}
+              />
+              <Stack.Screen
+                name="OrderDetail"
+                component={OrderDetailScreen}
+                options={{ title: 'Detail Transaksi' }}
+              />
+              <Stack.Screen
+                name="Report"
+                component={ReportScreen}
+                options={{ title: 'Laporan Omzet' }}
+              />
+              <Stack.Screen
+                name="EditProduct"
+                component={EditProductScreen}
+                options={{ title: 'Edit Produk' }}
+              />
+              <Stack.Screen
+                name="Setting"
+                component={SettingScreen}
+                options={{ title: 'Pengaturan Kasir' }}
+              />
+              <Stack.Screen
+                name="PrinterSetting"
+                component={PrinterSettingScreen}
+                options={{ title: 'Pengaturan Printer Bluetooth' }}
+              />
+            </>
+          ) : (
+            <>
+              <Stack.Screen name="Login" options={{ headerShown: false }}>
+                {props => (
+                  <LoginScreen
+                    {...props}
+                    onLoginSuccess={() => {
+                      console.log('Login sukses terpicu!');
+                      setIsLoggedIn(true);
+                    }}
+                  />
+                )}
+              </Stack.Screen>
+              <Stack.Screen name="Register" component={RegisterScreen} />
+            </>
+          )}
+        </Stack.Navigator>
+      </Suspense>
+    </NavigationContainer>
   );
 }
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
-
-export default App;

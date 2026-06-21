@@ -1,3 +1,4 @@
+
 import RNBluetoothClassic from 'react-native-bluetooth-classic';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
@@ -78,3 +79,4 @@ export const cetakStrukKasir = async (dataTransaksi: {
     Alert.alert('Error', 'Terjadi masalah saat mengirim data ke printer.');
   }
 };
+

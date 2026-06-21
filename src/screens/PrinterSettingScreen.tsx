@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { View, Text, Button, FlatList, TouchableOpacity, Alert } from 'react-native';
 import RNBluetoothClassic from 'react-native-bluetooth-classic';
@@ -42,4 +43,5 @@ export default function PrinterSettingScreen() {
       />
     </View>
   );
+
 }

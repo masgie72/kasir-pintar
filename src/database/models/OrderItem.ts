@@ -1,3 +1,4 @@
+
 import { Model } from '@nozbe/watermelondb';
 import { field, relation, text } from '@nozbe/watermelondb/decorators';
 
@@ -16,3 +17,4 @@ export default class OrderItem extends Model {
   @field('price') price!: number;          
   @field('quantity') quantity!: number;    
 }
+

@@ -1,3 +1,4 @@
+
 import { Q } from '@nozbe/watermelondb';
 
 import { database } from '../database'; // Sesuaikan dengan jalur file inisialisasi database Anda
@@ -68,4 +69,5 @@ export const verifyUserLogin = async (email: string, inputPin: string): Promise<
   } catch (error) {
     return false;
   }
+
 };

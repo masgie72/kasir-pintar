@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 
 interface CartItem {
@@ -49,3 +50,4 @@ export const useCartStore = create<CartStore>((set) => ({
 
   clearCart: () => set({ items: [] }),
 }));
+

@@ -1,3 +1,4 @@
+
 import { database } from '../database'; // Sesuaikan dengan path database Anda
 import { Q } from '@nozbe/watermelondb';
 
@@ -22,4 +23,5 @@ export const registerUser = async (name: string, email: string, pin: string) => 
     console.error('Gagal mendaftarkan user:', error);
     throw error;
   }
+
 };
