@@ -6,24 +6,18 @@ import { ActivityIndicator, View } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
-// 💡 SOLUSI INDUK: Ubah semua impor statis menjadi LAZY LOADING menggunakan React.lazy()
-// Cara ini menunda pemuatan file screen agar tidak merusak siklus inisialisasi React Hooks
+// Lazy loading semua screen
+const DashboardScreen = React.lazy(() => import('./src/screens/DashboardScreen'));
 const HomeScreen = React.lazy(() => import('./src/screens/HomeScreen'));
 const HistoryScreen = React.lazy(() => import('./src/screens/HistoryScreen'));
-const OrderDetailScreen = React.lazy(
-  () => import('./src/screens/OrderDetailScreen'),
-);
+const OrderDetailScreen = React.lazy(() => import('./src/screens/OrderDetailScreen'));
 const ProductScreen = React.lazy(() => import('./src/screens/ProductScreen'));
 const ReportScreen = React.lazy(() => import('./src/screens/ReportScreen'));
 const LoginScreen = React.lazy(() => import('./src/screens/LoginScreen'));
-const EditProductScreen = React.lazy(
-  () => import('./src/screens/EditProductScreen'),
-);
+const EditProductScreen = React.lazy(() => import('./src/screens/EditProductScreen'));
 const RegisterScreen = React.lazy(() => import('./src/screens/RegisterScreen'));
 const SettingScreen = React.lazy(() => import('./src/screens/SettingScreen'));
-const PrinterSettingScreen = React.lazy(
-  () => import('./src/screens/PrinterSettingScreen'),
-);
+const PrinterSettingScreen = React.lazy(() => import('./src/screens/PrinterSettingScreen'));
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -32,18 +26,14 @@ export default function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // 💡 Muat database secara aman di dalam daur hidup asinkron
         const { database } = require('./src/database');
 
         if (database) {
           console.log('Database siap digunakan di App.tsx');
-          const {
-            inisialisasiSuperUser: seedFunction,
-          } = require('./src/database/dbSeeder');
+          const { inisialisasiSuperUser: seedFunction } = require('./src/database/dbSeeder');
           await (seedFunction as any)(database);
         }
 
-        // Cek status login
         const status = await AsyncStorage.getItem('isLoggedIn');
         setIsLoggedIn(status === 'true');
       } catch (error) {
@@ -56,17 +46,9 @@ export default function App() {
     initializeApp();
   }, []);
 
-  // Tampilkan layar loading biru saat memproses inisialisasi aplikasi
   if (isLoading) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: '#F8FAFC',
-        }}
-      >
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' }}>
         <ActivityIndicator size="large" color="#3B82F6" />
       </View>
     );
@@ -74,17 +56,9 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      {/* 💡 Bungkus struktur Navigator dengan Suspense untuk menangani transisi Lazy Loading */}
       <Suspense
         fallback={
-          <View
-            style={{
-              flex: 1,
-              justifyContent: 'center',
-              alignItems: 'center',
-              backgroundColor: '#F8FAFC',
-            }}
-          >
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' }}>
             <ActivityIndicator size="large" color="#3B82F6" />
           </View>
         }
@@ -92,6 +66,18 @@ export default function App() {
         <Stack.Navigator>
           {isLoggedIn ? (
             <>
+              <Stack.Screen name="Dashboard" options={{ headerShown: false }}>
+                {props => (
+                  <DashboardScreen
+                    {...props}
+                    onLogoutSuccess={() => {
+                      console.log('Kasir berhasil keluar');
+                      setIsLoggedIn(false);
+                    }}
+                  />
+                )}
+              </Stack.Screen>
+
               <Stack.Screen name="Home" options={{ title: 'Kasir' }}>
                 {props => (
                   <HomeScreen
@@ -103,37 +89,14 @@ export default function App() {
                   />
                 )}
               </Stack.Screen>
+
               <Stack.Screen name="Product" component={ProductScreen} />
-              <Stack.Screen
-                name="History"
-                component={HistoryScreen}
-                options={{ title: 'Riwayat Transaksi' }}
-              />
-              <Stack.Screen
-                name="OrderDetail"
-                component={OrderDetailScreen}
-                options={{ title: 'Detail Transaksi' }}
-              />
-              <Stack.Screen
-                name="Report"
-                component={ReportScreen}
-                options={{ title: 'Laporan Omzet' }}
-              />
-              <Stack.Screen
-                name="EditProduct"
-                component={EditProductScreen}
-                options={{ title: 'Edit Produk' }}
-              />
-              <Stack.Screen
-                name="Setting"
-                component={SettingScreen}
-                options={{ title: 'Pengaturan Kasir' }}
-              />
-              <Stack.Screen
-                name="PrinterSetting"
-                component={PrinterSettingScreen}
-                options={{ title: 'Pengaturan Printer Bluetooth' }}
-              />
+              <Stack.Screen name="History" component={HistoryScreen} options={{ title: 'Riwayat Transaksi' }} />
+              <Stack.Screen name="OrderDetail" component={OrderDetailScreen} options={{ title: 'Detail Transaksi' }} />
+              <Stack.Screen name="Report" component={ReportScreen} options={{ title: 'Laporan Omzet' }} />
+              <Stack.Screen name="EditProduct" component={EditProductScreen} options={{ title: 'Edit Produk' }} />
+              <Stack.Screen name="Setting" component={SettingScreen} options={{ title: 'Pengaturan Kasir' }} />
+              <Stack.Screen name="PrinterSetting" component={PrinterSettingScreen} options={{ title: 'Pengaturan Printer Bluetooth' }} />
             </>
           ) : (
             <>
