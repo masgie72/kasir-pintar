@@ -1,20 +1,24 @@
-
-import { Model } from '@nozbe/watermelondb';
-import { field, relation, text } from '@nozbe/watermelondb/decorators';
+import { Model, Relation } from '@nozbe/watermelondb'
+import { field, date, relation } from '@nozbe/watermelondb/decorators'
+import { Associations } from '@nozbe/watermelondb/Model'
+import Order from './Order'
+import Product from './Product'
 
 export default class OrderItem extends Model {
-  static table = 'order_items';
-
-  // 💡 PERBAIKAN: Tambahkan "as const" di akhir kurung kurawal
-  static associations = {
+  static table = 'order_items'
+  static associations: Associations = {
     orders: { type: 'belongs_to', key: 'order_id' },
-  } as const;
+    products: { type: 'belongs_to', key: 'product_id' },
+  } as const
 
-  @relation('orders', 'order_id') order: any;
+  @field('order_id') orderId!: string
+  @field('product_id') productId!: string
+  @field('name') name!: string
+  @field('price') price!: number
+  @field('quantity') quantity!: number
+  @date('updated_at') updatedAt!: Date
+  @field('is_synced') isSynced!: boolean
 
-  @text('name') name!: string;             
-  @field('product_id') productId!: string; 
-  @field('price') price!: number;          
-  @field('quantity') quantity!: number;    
+  @relation('orders', 'order_id') order!: Relation<Order>
+  @relation('products', 'product_id') product!: Relation<Product>
 }
-
