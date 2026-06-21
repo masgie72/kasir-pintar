@@ -8,7 +8,7 @@ const Stack = createNativeStackNavigator();
 
 // Lazy loading semua screen
 const DashboardScreen = React.lazy(() => import('./src/screens/DashboardScreen'));
-const HomeScreen = React.lazy(() => import('./src/screens/HomeScreen'));
+const HomeScreen = React.lazy(() => import('./src/screens/KasirScreen'));
 const HistoryScreen = React.lazy(() => import('./src/screens/HistoryScreen'));
 const OrderDetailScreen = React.lazy(() => import('./src/screens/OrderDetailScreen'));
 const ProductScreen = React.lazy(() => import('./src/screens/ProductScreen'));
@@ -91,8 +91,8 @@ export default function App() {
               </Stack.Screen>
 
               <Stack.Screen name="Product" component={ProductScreen} />
-              <Stack.Screen name="History" component={HistoryScreen} options={{ title: 'Riwayat Transaksi' }} />
-              <Stack.Screen name="OrderDetail" component={OrderDetailScreen} options={{ title: 'Detail Transaksi' }} />
+              <Stack.Screen name="History" component={HistoryScreen} options={{ title: 'Riwayat Transaksi', headerShown:false  }} />
+              <Stack.Screen name="OrderDetail" component={OrderDetailScreen} options={{ title: 'Detail Transaksi'}} />
               <Stack.Screen name="Report" component={ReportScreen} options={{ title: 'Laporan Omzet' }} />
               <Stack.Screen name="EditProduct" component={EditProductScreen} options={{ title: 'Edit Produk' }} />
               <Stack.Screen name="Setting" component={SettingScreen} options={{ title: 'Pengaturan Kasir' }} />

@@ -1,120 +1,189 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
-import { Q, Collection } from '@nozbe/watermelondb';
-import { database } from '../database';
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Svg, { Path } from 'react-native-svg';
+import LogoutIcon from '../assets/icons/logout.svg';
 
-import Order from '../database/models/Order';
-import Product from '../database/models/Product';
+type Props = {
+  navigation: any;
+  onLogoutSuccess?: () => void;
+};
 
-type Stat = { label: string; value: string; color: string };
-
-export default function DashboardScreen({ navigation }: any) {
-  const [stats, setStats] = useState<Stat[]>([]);
-  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
-
-  useEffect(() => {
-    const load = async () => {
-      // kasih tipe biar TS kenal field-nya
-      const products: Collection<Product> = database.get<Product>('products');
-      const orders: Collection<Order> = database.get<Order>('orders');
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayTs = today.getTime();
-
-      const [productCount, lowStock, todayOrders] = await Promise.all([
-        products.query().fetchCount(),
-        products.query(Q.where('stock', Q.lt(5))).fetchCount(),
-        orders.query(Q.where('created_at', Q.gte(todayTs))).fetch(),
-      ]);
-
-      const totalHariIni = todayOrders.reduce((sum, o) => sum + (o.totalPrice || 0), 0);
-
-      setStats([
-        { label: 'Penjualan Hari Ini', value: `Rp ${totalHariIni.toLocaleString('id-ID')}`, color: '#4F46E5' },
-        { label: 'Order Hari Ini', value: `${todayOrders.length}`, color: '#059669' },
-        { label: 'Produk Aktif', value: `${productCount}`, color: '#DC2626' },
-        { label: 'Stok Menipis', value: `${lowStock}`, color: '#EA580C' },
-      ]);
-
-      const recent = await orders.query(
-        Q.sortBy('created_at', Q.desc),
-        Q.take(5)
-      ).fetch();
-      setRecentOrders(recent);
-    };
-
-    load();
-    const unsub = navigation.addListener('focus', load);
-    return unsub;
-  }, [navigation]);
-
-  const menus = [
-    { title: 'Produk', icon: '📦', screen: 'Products' },
-    { title: 'Kasir', icon: '🧾', screen: 'Cashier' },
-    { title: 'Laporan', icon: '📊', screen: 'Reports' },
-    { title: 'Pengguna', icon: '👤', screen: 'Users' },
-  ];
+export default function DashboardScreen({
+  navigation,
+  onLogoutSuccess,
+}: Props) {
+  const handleLogout = async () => {
+    Alert.alert('Keluar', 'Apakah Anda yakin ingin keluar?', [
+      { text: 'Batal', style: 'cancel' },
+      {
+        text: 'Keluar',
+        style: 'destructive',
+        onPress: async () => {
+          await AsyncStorage.removeItem('isLoggedIn');
+          onLogoutSuccess?.();
+        },
+      },
+    ]);
+  };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.header}>Dashboard Kasir Pintar</Text>
-
-      <View style={styles.statsGrid}>
-        {stats.map((s) => (
-          <View key={s.label} style={[styles.card, { borderLeftColor: s.color }]}>
-            <Text style={styles.cardLabel}>{s.label}</Text>
-            <Text style={styles.cardValue}>{s.value}</Text>
-          </View>
-        ))}
-      </View>
-
-      <Text style={styles.sectionTitle}>Menu Cepat</Text>
-      <View style={styles.menuGrid}>
-        {menus.map(m => (
-          <TouchableOpacity key={m.title} style={styles.menuItem} onPress={() => navigation.navigate(m.screen)}>
-            <Text style={styles.menuIcon}>{m.icon}</Text>
-            <Text style={styles.menuText}>{m.title}</Text>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      {/* HEADER - sama seperti HomeScreen */}
+      <View style={styles.header}>
+        <View style={styles.profileSection}>
+          <TouchableOpacity
+            style={styles.avatarPlaceholder}
+            onPress={() => navigation.navigate('Setting')}
+          >
+            <Text style={styles.avatarText}>⚙</Text>
           </TouchableOpacity>
-        ))}
+          <View>
+            <Text style={styles.headerSubtitle}>Selamat Datang,</Text>
+            <Text style={styles.headerTitle}>Kasir Pintar 💼</Text>
+          </View>
+        </View>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutIcon}>
+          <LogoutIcon width={22} height={22} fill="#EF4444" />
+        </TouchableOpacity>
       </View>
 
-      <Text style={styles.sectionTitle}>Order Terbaru</Text>
-      <FlatList
-        data={recentOrders}
-        keyExtractor={item => item.id}
-        scrollEnabled={false}
-        renderItem={({ item }) => (
-          <View style={styles.orderRow}>
-            <View>
-              <Text style={styles.orderId}>#{item.id.slice(0, 6)}</Text>
-              {/* createdAt sudah Date karena pakai @date */}
-              <Text style={styles.orderDate}>{item.createdAt.toLocaleString('id-ID')}</Text>
-            </View>
-            <Text style={styles.orderTotal}>Rp {(item.totalPrice || 0).toLocaleString('id-ID')}</Text>
-          </View>
-        )}
-        ListEmptyComponent={<Text style={styles.empty}>Belum ada order</Text>}
-      />
-    </ScrollView>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* MENU CEPAT - copy dari HomeScreen */}
+        <View style={styles.menuGrid}>
+          <TouchableOpacity
+            style={[styles.menuCard, { backgroundColor: '#DBEAFE' }]}
+            onPress={() => navigation.navigate('Home')}
+          >
+            <Text style={styles.menuIcon}>🛒</Text>
+            <Text style={[styles.menuText, { color: '#1D4ED8' }]}>
+              Mulai Kasir
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuCard, { backgroundColor: '#E0F2FE' }]}
+            onPress={() => navigation.navigate('History')}
+          >
+            <Text style={styles.menuIcon}>📜</Text>
+            <Text style={[styles.menuText, { color: '#0369A1' }]}>Riwayat</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuCard, { backgroundColor: '#EEF2FF' }]}
+            onPress={() => navigation.navigate('Product')}
+          >
+            <Text style={styles.menuIcon}>📦</Text>
+            <Text style={[styles.menuText, { color: '#4338CA' }]}>Produk</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuCard, { backgroundColor: '#ECFDF5' }]}
+            onPress={() => navigation.navigate('Report')}
+          >
+            <Text style={styles.menuIcon}>📊</Text>
+            <Text style={[styles.menuText, { color: '#047857' }]}>Laporan</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuCard, { backgroundColor: '#FEF3C7' }]}
+            onPress={() => navigation.navigate('PrinterSetting')}
+          >
+            <Text style={styles.menuIcon}>🖨</Text>
+            <Text style={[styles.menuText, { color: '#92400E' }]}>Printer</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuCard, { backgroundColor: '#F3E8FF' }]}
+            onPress={() => navigation.navigate('Setting')}
+          >
+            <Text style={styles.menuIcon}>⚙️</Text>
+            <Text style={[styles.menuText, { color: '#6B21A8' }]}>
+              Pengaturan
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC', padding: 16 },
-  header: { fontSize: 24, fontWeight: '700', marginBottom: 16, color: '#0F172A' },
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  card: { backgroundColor: 'white', width: '48%', padding: 14, borderRadius: 16, borderLeftWidth: 4, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
-  cardLabel: { fontSize: 12, color: '#64748B' },
-  cardValue: { fontSize: 18, fontWeight: '700', marginTop: 4, color: '#0F172A' },
-  sectionTitle: { fontSize: 16, fontWeight: '600', marginTop: 24, marginBottom: 8, color: '#0F172A' },
-  menuGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  menuItem: { backgroundColor: 'white', width: '22%', aspectRatio: 1, borderRadius: 16, justifyContent: 'center', alignItems: 'center', elevation: 1 },
-  menuIcon: { fontSize: 24 },
-  menuText: { fontSize: 12, marginTop: 6, color: '#334155' },
-  orderRow: { backgroundColor: 'white', padding: 12, borderRadius: 12, flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  orderId: { fontWeight: '600', color: '#0F172A' },
-  orderDate: { fontSize: 12, color: '#64748B' },
-  orderTotal: { fontWeight: '700', color: '#059669' },
-  empty: { textAlign: 'center', color: '#94A3B8', marginTop: 12 },
+  safeArea: { flex: 1, backgroundColor: '#F8FAFC' },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  profileSection: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  avatarPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  avatarText: { fontSize: 16 },
+  headerSubtitle: { fontSize: 12, color: '#64748B', fontWeight: '500' },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginTop: 1,
+  },
+  logoutButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    backgroundColor: '#FEE2E2',
+    borderRadius: 10,
+  },
+  logoutText: { color: '#EF4444', fontWeight: '700', fontSize: 13 },
+
+  scrollContainer: { padding: 16 },
+  menuGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  menuCard: {
+    width: '48%',
+    aspectRatio: 1,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  menuIcon: { fontSize: 32, marginBottom: 8 },
+  menuText: { fontSize: 14, fontWeight: '700', textAlign: 'center' },
+  logoutIcon: {
+    padding: 8,
+    backgroundColor: '#FEE2E2',
+    borderRadius: 10,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
