@@ -1,3 +1,4 @@
+import RNBootSplash from "react-native-bootsplash";
 import React, { useState, useEffect, Suspense } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -22,6 +23,10 @@ const PrinterSettingScreen = React.lazy(() => import('./src/screens/PrinterSetti
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+useEffect(() => {
+  RNBootSplash.hide({ fade: true });
+}, []);
 
   useEffect(() => {
     const initializeApp = async () => {

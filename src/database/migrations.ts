@@ -1,6 +1,6 @@
-import { schemaMigrations, createTable } from '@nozbe/watermelondb/Schema/migrations';
+import { schemaMigrations, createTable, addColumns } from '@nozbe/watermelondb/Schema/migrations'
 
-const migrations = schemaMigrations({
+export default schemaMigrations({
   migrations: [
     {
       // v2: pertama kali bikin orders
@@ -25,7 +25,7 @@ const migrations = schemaMigrations({
           columns: [
             { name: 'order_id', type: 'string', isIndexed: true },
             { name: 'product_id', type: 'string', isIndexed: true },
-            { name: 'name', type: 'string' }, // ini yang kamu tandai 💡
+            { name: 'name', type: 'string' },
             { name: 'price', type: 'number' },
             { name: 'quantity', type: 'number' },
           ],
@@ -33,7 +33,7 @@ const migrations = schemaMigrations({
       ],
     },
     {
-      // v4: tambah products dan users, sekalian index email
+      // v4: tambah products dan users
       toVersion: 4,
       steps: [
         createTable({
@@ -50,12 +50,58 @@ const migrations = schemaMigrations({
             { name: 'name', type: 'string' },
             { name: 'email', type: 'string', isIndexed: true },
             { name: 'pin', type: 'string' },
-            { name: 'role', type: 'string' }, // ini yang ketinggalan di file kamu
+            { name: 'role', type: 'string' },
           ],
         }),
       ],
     },
+    {
+      // v5: versi bersih - siap sync + POS
+      toVersion: 5,
+      steps: [
+        // orders
+        addColumns({
+          table: 'orders',
+          columns: [
+            { name: 'shift_id', type: 'string', isIndexed: true },
+            { name: 'status', type: 'string', isIndexed: true },
+            { name: 'payment_method', type: 'string' },
+            { name: 'updated_at', type: 'number', isIndexed: true },
+            { name: 'is_synced', type: 'boolean' },
+          ],
+        }),
+        // order_items
+        addColumns({
+          table: 'order_items',
+          columns: [
+            { name: 'updated_at', type: 'number', isIndexed: true },
+            { name: 'is_synced', type: 'boolean' },
+          ],
+        }),
+        // products
+        addColumns({
+          table: 'products',
+          columns: [
+            { name: 'barcode', type: 'string', isIndexed: true },
+            { name: 'is_active', type: 'boolean' },
+            { name: 'updated_at', type: 'number', isIndexed: true },
+            { name: 'is_synced', type: 'boolean' },
+          ],
+        }),
+        // users
+        addColumns({
+          table: 'users',
+          columns: [
+            { name: 'pin_hash', type: 'string' },
+            { name: 'is_active', type: 'boolean' },
+            { name: 'updated_at', type: 'number', isIndexed: true },
+            { name: 'is_synced', type: 'boolean' },
+          ],
+        }),
+        // index untuk kolom lama yang belum ada index
+        { type: 'sql', sql: 'CREATE INDEX IF NOT EXISTS products_name ON products (name)' },
+        { type: 'sql', sql: 'CREATE INDEX IF NOT EXISTS users_role ON users (role)' },
+      ],
+    },
   ],
-});
-
-export default migrations;
+})
