@@ -54,6 +54,7 @@ export default function LoginScreen({ navigation, onLoginSuccess }: Props) {
           await AsyncStorage.setItem('isLoggedIn', 'true');
           await AsyncStorage.setItem('user_role', user.role); 
           await AsyncStorage.setItem('user_name', user.name);
+          await AsyncStorage.setItem('user_id', user.id);
           onLoginSuccess();
         } else {
           Alert.alert('Gagal', 'PIN salah!');

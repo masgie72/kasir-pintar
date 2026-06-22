@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { database } from '../database';
 import TrashIcon from '../assets/icons/Trash.svg'; // BENAR
-import EditIcon from '../assets/icons/Edit.svg'; 
+import EditIcon from '../assets/icons/Edit.svg';
 
 export default function ProductScreen({ navigation }: any) {
   const [products, setProducts] = useState<any[]>([]);
@@ -199,7 +199,7 @@ export default function ProductScreen({ navigation }: any) {
                 <TouchableOpacity
                   style={styles.editButton}
                   onPress={() =>
-                    navigation.navigate('EditProduct', { product: item })
+                    navigation.navigate('EditProduct', { productId: item.id })
                   }
                 >
                   <EditIcon width={24} height={24} fill="#3B82F6" />

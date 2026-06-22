@@ -20,7 +20,7 @@ type Props = {
 
 export default function DashboardScreen({
   navigation,
-  onLogoutSuccess, 
+  onLogoutSuccess,
 }: Props) {
   // 1. Tambahkan state dinamis untuk nama dan role user
   const [userName, setUserName] = useState('Kasir');
@@ -52,8 +52,7 @@ export default function DashboardScreen({
       }
     };
 
-    
-     // 2. KALKULASI DINAMIS: Menghitung Omzet Asli 7 Hari Terakhir dari WatermelonDB
+    // 2. KALKULASI DINAMIS: Menghitung Omzet Asli 7 Hari Terakhir dari WatermelonDB
     const subSales = database
       .get('orders')
       .query()
@@ -63,10 +62,12 @@ export default function DashboardScreen({
           // Buat wadah penghitung omzet per hari (0 = Minggu, 1 = Senin, dst)
           const omzetPerHari = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
 
-           orders.forEach(order => {
+          orders.forEach(order => {
             // 1. Konversi timestamp number dari skema database ke objek tanggal
-            const tanggalOrder = new Date(Number(order.createdAt || order.created_at));
-            const hariKe = tanggalOrder.getDay(); 
+            const tanggalOrder = new Date(
+              Number(order.createdAt || order.created_at),
+            );
+            const hariKe = tanggalOrder.getDay();
             const harga = Number(order.totalPrice || order.total_price || 0);
 
             // PERBAIKAN: Tambahkan 'as 0 | 1 | 2 | 3 | 4 | 5 | 6' agar TypeScript tidak komplain
@@ -76,7 +77,7 @@ export default function DashboardScreen({
             omzetPerHari[indeksHari] += harga;
           });
 
-           setSalesData([
+          setSalesData([
             { day: 'Sen', total: omzetPerHari[1] },
             { day: 'Sel', total: omzetPerHari[2] },
             { day: 'Rab', total: omzetPerHari[3] },
@@ -96,7 +97,7 @@ export default function DashboardScreen({
 
   const maxSale = Math.max(...salesData.map(d => d.total), 1);
 
-   const handleLogout = async () => {
+  const handleLogout = async () => {
     Alert.alert('Keluar', 'Apakah Anda yakin ingin keluar?', [
       { text: 'Batal', style: 'cancel' },
       {
@@ -108,7 +109,7 @@ export default function DashboardScreen({
             await AsyncStorage.removeItem('isLoggedIn');
             await AsyncStorage.removeItem('user_role');
             await AsyncStorage.removeItem('user_name');
-            
+
             // 2. Langsung pemicu fungsi logout bawaan dari props
             if (onLogoutSuccess) {
               onLogoutSuccess();
@@ -126,8 +127,6 @@ export default function DashboardScreen({
       },
     ]);
   };
-
-
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>

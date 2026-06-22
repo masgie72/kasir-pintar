@@ -79,7 +79,8 @@ export default function KasirScreen({ navigation, route }: any) {
     if (!items.length) return;
     try {
       const deviceId = (await AsyncStorage.getItem('device_id')) || 'UNKNOWN';
-      await createOrder('kasir_01', totalPrice, items, deviceId);
+      const currentUserId = (await AsyncStorage.getItem('user_id')) || 'SYSTEM_KASIR';
+      await createOrder(currentUserId, totalPrice, items, deviceId);
       await jalankanCetakStruk(items, totalPrice);
       
       // PERBAIKAN: Tampilkan alert dulu, berikan callback ketika tombol OK ditekan
