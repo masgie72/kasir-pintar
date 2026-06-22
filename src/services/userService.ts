@@ -36,8 +36,17 @@ export const getAllUsers = () => {
   return usersCollection.query();
 };
 
-// 3. UPDATE - Memperbarui Data User
-export const updateUser = async (user: User, updatedData: { name?: string; email?: string; pin?: string }): Promise<void> => {
+/// 1. UPDATE USER (Hanya diizinkan jika pelakunya adalah owner)
+export const updateUserWithAuth = async (
+  currentUserRole: string, 
+  user: User, 
+  updatedData: { name?: string; email?: string; pin?: string }
+): Promise<void> => {
+  // Blokir di tingkat database jika bukan owner
+  if (currentUserRole !== 'owner') {
+    throw new Error('Otoritas tidak sah! Anda bukan pemilik toko.');
+  }
+
   await database.write(async () => {
     await user.update((u: any) => {
       if (updatedData.name !== undefined) u.name = updatedData.name;
@@ -50,12 +59,20 @@ export const updateUser = async (user: User, updatedData: { name?: string; email
   });
 };
 
-// 4. DELETE - Menghapus User
-export const deleteUser = async (user: User): Promise<void> => {
+// 2. DELETE USER (Hanya diizinkan jika pelakunya adalah owner)
+export const deleteUserWithAuth = async (currentUserRole: string, user: User): Promise<void> => {
+  if (currentUserRole !== 'owner') {
+    throw new Error('Otoritas tidak sah! Anda bukan pemilik toko.');
+  }
+  if (user.role === 'owner') {
+    throw new Error('Akun Owner utama tidak bisa dihapus.');
+  }
+
   await database.write(async () => {
-    await user.markAsDeleted(); // Memicu soft delete agar aman disinkronkan ke cloud backend nanti
+    await user.markAsDeleted(); 
   });
 };
+
 
 // 5. VALIDASI LOGIN
 export const verifyUserLogin = async (email: string, inputPin: string): Promise<boolean> => {

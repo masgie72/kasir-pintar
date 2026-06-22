@@ -225,14 +225,6 @@ export default function RegisterScreen({ navigation }: any) {
               <Text style={styles.buttonText}>Daftar Sekarang</Text>
             )}
           </TouchableOpacity>
-
-          {/* Navigasi Ke Login */}
-          <View style={styles.footerRow}>
-            <Text style={styles.footerText}>Sudah punya akun? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.loginLink}>Masuk di sini</Text>
-            </TouchableOpacity>
-          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

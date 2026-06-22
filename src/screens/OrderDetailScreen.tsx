@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -25,7 +24,8 @@ export default function OrderDetailScreen({ route, navigation }: any) {
   const [total, setTotal] = useState<number>(initialTotal ?? 0);
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [isPrinting, setIsPrinting] = useState<boolean>(false); // State untuk memantau proses cetak
+  const [isPrinting, setIsPrinting] = useState<boolean>(false); 
+  const [kasirName, setKasirName] = useState<string>('Memuat...'); // State baru untuk menyimpan nama kasir
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,7 +35,7 @@ export default function OrderDetailScreen({ route, navigation }: any) {
       }
       try {
         const order = await database.get<Order>('orders').find(orderId);
-        const fetchedItems = await order.orderItems.fetch();
+        const fetchedItems = await order.orderItems.fetch() as any;
 
         const mappedItems = fetchedItems.map((item: any) => ({
           id: item.id,
@@ -46,6 +46,20 @@ export default function OrderDetailScreen({ route, navigation }: any) {
 
         setItems(mappedItems);
         setTotal(order.totalPrice);
+
+        // 👑 AMBIL DATA USER/KASIR SECARA DINAMIS BERDASARKAN USER_ID NYATA
+        const uId = order.userId || (order as any)._raw?.user_id;
+        if (uId) {
+          try {
+            const userRecord = await database.get('users').find(uId) as any;
+            setKasirName(userRecord.name); 
+          } catch {
+            setKasirName('Kasir (ID: ' + uId.substring(0, 4).toUpperCase() + ')');
+          }
+        } else {
+          setKasirName('Tidak Diketahui');
+        }
+
       } catch (error) {
         console.error('Gagal mengambil data:', error);
       } finally {
@@ -55,38 +69,32 @@ export default function OrderDetailScreen({ route, navigation }: any) {
     fetchData();
   }, [orderId]);
 
-  // 💡 FUNGSI UTAMA BARU UNTUK MENCETAK VIA BLUETOOTH CLASSIC
   const handlePrint = async () => {
     if (items.length === 0) return;
 
     setIsPrinting(true);
     try {
-      // 1. Ambil MAC Address printer dari AsyncStorage yang disimpan di halaman setelan
       const printerAddress = await AsyncStorage.getItem('printerAddress');
 
-    if (!printerAddress) {
-  Alert.alert(
-    'Printer Belum Disetting', // Judul
-    'Silakan pilih dan simpan perangkat printer thermal Anda terlebih dahulu agar bisa mencetak struk.', // Pesan
-    [
-      { text: 'Batal', style: 'cancel' },
-      { 
-        text: 'Buka Pengaturan', 
-        onPress: () => navigation.navigate('PrinterSetting') // 👈 Mengarahkan kasir langsung ke screen scan printer
+      if (!printerAddress) {
+        Alert.alert(
+          'Printer Belum Disetting', 
+          'Silakan pilih dan simpan perangkat printer thermal Anda terlebih dahulu agar bisa mencetak struk.', 
+          [
+            { text: 'Batal', style: 'cancel' },
+            { 
+              text: 'Buka Pengaturan', 
+              onPress: () => navigation.navigate('PrinterSetting') 
+            }
+          ]
+        );
+        setIsPrinting(false);
+        return;
       }
-    ]
-  );
-  setIsPrinting(false);
-  return;
-}
 
-      // 2. Hubungkan langsung ke perangkat printer thermal
-      const connected = await RNBluetoothClassic.connectToDevice(
-        printerAddress,
-      );
+      const connected = await RNBluetoothClassic.connectToDevice(printerAddress);
 
       if (connected) {
-        // Karakter kontrol printer ESC/POS
         const ESC = '\u001b';
         const initPrinter = `${ESC}@`;
         const alignCenter = `${ESC}a\u0001`;
@@ -94,26 +102,20 @@ export default function OrderDetailScreen({ route, navigation }: any) {
 
         let struk = '';
 
-        // --- Susun Teks Struk (Batas Maksimal Lebar Kertas 58mm = 32 Karakter) ---
         struk += initPrinter;
         struk += alignCenter;
         struk += 'KASIR PINTAR TOKO\n';
         struk += 'Detail Riwayat Transaksi\n';
         struk += `ID: #${orderId?.slice(-6).toUpperCase()}\n`;
-        struk += '--------------------------------\n'; // 32 Karakter pembatas
+        struk += `Kasir: ${kasirName}\n`; // Menyertakan nama kasir asli pada kertas struk fisik
+        struk += '--------------------------------\n'; 
 
         struk += alignLeft;
         items.forEach(item => {
-          // Baris 1: Nama Item Produk
           struk += `${item.name.slice(0, 32)}\n`;
 
-          // Baris 2: Detail Qty x Harga di Kiri dan Subtotal di Kanan
-          const detailHarga = `${
-            item.quantity
-          } x Rp ${item.price.toLocaleString('id-ID')}`;
-          const subTotal = `Rp ${(item.quantity * item.price).toLocaleString(
-            'id-ID',
-          )}`;
+          const detailHarga = `${item.quantity} x Rp ${item.price.toLocaleString('id-ID')}`;
+          const subTotal = `Rp ${(item.quantity * item.price).toLocaleString('id-ID')}`;
           const sisaSpasi = 32 - (detailHarga.length + subTotal.length);
           const spasiPemisah = ' '.repeat(sisaSpasi > 0 ? sisaSpasi : 1);
 
@@ -122,29 +124,20 @@ export default function OrderDetailScreen({ route, navigation }: any) {
 
         struk += '--------------------------------\n';
 
-        // Baris Total Akhir Belanja
         const teksTotalLabel = 'TOTAL AKHIR:';
         const teksTotalHarga = `Rp ${total.toLocaleString('id-ID')}`;
-        const spasiTotal = ' '.repeat(
-          32 - (teksTotalLabel.length + teksTotalHarga.length),
-        );
+        const spasiTotal = ' '.repeat(32 - (teksTotalLabel.length + teksTotalHarga.length));
         struk += `${teksTotalLabel}${spasiTotal}${teksTotalHarga}\n`;
 
         struk += '\n';
         struk += alignCenter;
-        struk += 'Terima Kasih\nAtas Kepercayaan Anda 🙏\n\n\n\n'; // Jarak potong kertas
+        struk += 'Terima Kasih\nAtas Kepercayaan Anda 🙏\n\n\n\n'; 
 
-        // 3. Kirim data teks mentah ke mesin printer
         await RNBluetoothClassic.writeToDevice(printerAddress, struk);
-
-        // 4. Putus koneksi agar baterai printer dan HP hemat
         await RNBluetoothClassic.disconnectFromDevice(printerAddress);
         Alert.alert('Sukses 🎉', 'Nota belanja sedang dicetak.');
       } else {
-        Alert.alert(
-          'Koneksi Gagal',
-          'Gagal menyambungkan ke printer. Pastikan mesin menyala.',
-        );
+        Alert.alert('Koneksi Gagal', 'Gagal menyambungkan ke printer. Pastikan mesin menyala.');
       }
     } catch (error) {
       console.error('Cetak Error:', error);
@@ -153,7 +146,6 @@ export default function OrderDetailScreen({ route, navigation }: any) {
       setIsPrinting(false);
     }
   };
-
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       {/* HEADER UTAMA */}
@@ -173,6 +165,13 @@ export default function OrderDetailScreen({ route, navigation }: any) {
         <View style={styles.content}>
           {/* DIGITAL RECEIPT CARD */}
           <View style={styles.receiptCard}>
+            
+            {/* 👑 BARIS BARU: Menampilkan info kasir yang melayani di atas struk digital */}
+            <View style={styles.cashierInfoRow}>
+              <Text style={styles.cashierLabel}>Kasir / Melayani :</Text>
+              <Text style={styles.cashierValue}>{kasirName} 💼</Text>
+            </View>
+
             <View style={styles.tableHeaderRow}>
               <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Item</Text>
               <Text
@@ -286,6 +285,18 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 3,
   },
+  // Style Baru untuk Baris Info Kasir Pelayan Toko
+  cashierInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    backgroundColor: '#F1F5F9',
+    padding: 12,
+    borderRadius: 10,
+  },
+  cashierLabel: { fontSize: 13, color: '#64748B', fontWeight: '600' },
+  cashierValue: { fontSize: 13, color: '#0F172A', fontWeight: '800' },
   tableHeaderRow: { flexDirection: 'row', paddingVertical: 4 },
   tableHeaderCell: {
     fontSize: 13,
@@ -346,4 +357,3 @@ const styles = StyleSheet.create({
   btnDisabled: { backgroundColor: '#94A3B8', elevation: 0, shadowOpacity: 0 },
   btnText: { color: '#FFF', fontWeight: '700', fontSize: 16 },
 });
-

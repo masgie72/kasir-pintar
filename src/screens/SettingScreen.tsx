@@ -67,11 +67,12 @@ export default function SettingScreen() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleOpenEdit = (user: User) => {
-    if (currentUserRole !== 'admin' && currentUserRole !== 'owner') {
+    const handleOpenEdit = (user: User) => {
+    // KUNCI UTAMA: Hanya role 'owner' yang boleh masuk ke formulir edit
+    if (currentUserRole !== 'owner') {
       Alert.alert(
         'Akses Ditolak ⚠️',
-        'Hanya akun administrator/pemilik yang boleh mengubah data kasir.',
+        'Hanya akun Pemilik Toko (Owner) yang memiliki otoritas untuk mengubah data user.',
       );
       return;
     }
@@ -82,12 +83,10 @@ export default function SettingScreen() {
     setIsModalVisible(true);
   };
 
-  const handleUpdateUser = async () => {
-    if (currentUserRole !== 'admin' && currentUserRole !== 'owner') {
-      Alert.alert(
-        'Akses Ditolak ⚠️',
-        'Anda tidak memiliki hak akses memodifikasi data.',
-      );
+
+ const handleUpdateUser = async () => {
+    if (currentUserRole !== 'owner') {
+      Alert.alert('Akses Ditolak ⚠️', 'Tindakan ilegal. Anda tidak memiliki hak akses pemilik.');
       return;
     }
     if (!selectedUser) return;
@@ -113,7 +112,7 @@ export default function SettingScreen() {
       }
 
       await updateUser(selectedUser, updatedData);
-      Alert.alert('Sukses 🎉', 'Data kasir berhasil diperbarui!');
+      Alert.alert('Sukses 🎉', 'Data user berhasil diperbarui!');
       setIsModalVisible(false);
       setSelectedUser(null);
     } catch (error) {
@@ -126,23 +125,18 @@ export default function SettingScreen() {
 
   const handleDeleteUser = (user: User) => {
     if (user.role === 'owner') {
-      Alert.alert(
-        'Tindakan Ilegal ❌',
-        'Akun Owner utama sistem tidak dapat dihapus oleh siapa pun!',
-      );
+      Alert.alert('Tindakan Ilegal ❌', 'Akun Owner utama tidak dapat dihapus oleh siapa pun!');
       return;
     }
-    if (currentUserRole !== 'admin' && currentUserRole !== 'owner') {
-      Alert.alert(
-        'Akses Ditolak ⚠️',
-        'Anda tidak memiliki otoritas menghapus data.',
-      );
+    // KUNCI UTAMA: Hanya owner yang boleh menghapus karyawan
+    if (currentUserRole !== 'owner') {
+      Alert.alert('Akses Ditolak ⚠️', 'Hanya Pemilik Toko (Owner) yang boleh menghapus akun.');
       return;
     }
 
     Alert.alert(
       'Hapus Akun',
-      `Apakah Anda yakin ingin menghapus kasir "${user.name}"?`,
+      `Apakah Anda yakin ingin menghapus user "${user.name}"?`,
       [
         { text: 'Batal', style: 'cancel' },
         {
@@ -151,7 +145,7 @@ export default function SettingScreen() {
           onPress: async () => {
             try {
               await deleteUser(user);
-              Alert.alert('Sukses 🎉', 'Akun kasir berhasil dihapus.');
+              Alert.alert('Sukses 🎉', 'Akun berhasil dihapus.');
               if (selectedUser?.id === user.id) {
                 setIsModalVisible(false);
               }
@@ -221,24 +215,26 @@ export default function SettingScreen() {
                 </View>
               </View>
 
-              {/* PROTEKSI UI: Sembunyikan tombol aksi jika bukan Admin / Owner */}
-              {(currentUserRole === 'admin' || currentUserRole === 'owner') && (
+               {/* PROTEKSI UI: Tombol Edit & Hapus otomatis tersembunyi total jika bukan OWNER */}
+              {currentUserRole === 'owner' && (
                 <View style={styles.cardActions}>
-                  <TouchableOpacity
-                    style={styles.editButton}
-                    onPress={() => handleOpenEdit(item)}
-                  >
+                  <TouchableOpacity style={styles.editButton} onPress={() => handleOpenEdit(item)}>
                     <Text style={styles.editButtonText}>✏️ Edit</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => handleDeleteUser(item)}
-                  >
+                  <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteUser(item)}>
                     <Text style={styles.deleteButtonText}>🗑️</Text>
                   </TouchableOpacity>
                 </View>
               )}
 
+              {/* Jika yang login adalah Kasir atau Admin biasa, beri tahu akses dikunci */}
+              {currentUserRole !== 'owner' && (
+                <View style={styles.cardActions}>
+                  <Text style={{ color: '#94A3B8', fontSize: 12, fontStyle: 'italic' }}>
+                    🔒 Akses Terkunci
+                  </Text>
+                </View>
+              )}
               {/* Jika bukan pemilik toko, beri info penanda akses terkunci */}
               {currentUserRole !== 'admin' && currentUserRole !== 'owner' && (
                 <View style={styles.cardActions}>

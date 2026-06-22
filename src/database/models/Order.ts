@@ -2,6 +2,8 @@ import { Model, Relation } from '@nozbe/watermelondb';
 import { field, date, children, relation } from '@nozbe/watermelondb/decorators';
 import { Associations } from '@nozbe/watermelondb/Model';
 import OrderItem from './OrderItem';
+import { Q } from '@nozbe/watermelondb';
+import { database } from '../../database';
 import User from './User';
 
 export default class Order extends Model {
@@ -29,3 +31,23 @@ export default class Order extends Model {
   @relation('users', 'user_id') user!: Relation<User>;
   @children('order_items') orderItems!: Relation<OrderItem>;
 }
+
+export const getActiveUserHistoryWithItems = async (activeUserId: string) => {
+  const orders = await database.get<Order>('orders').query(
+    Q.where('user_id', activeUserId),
+    Q.sortBy('created_at', Q.desc)
+  ).fetch();
+
+  // Membaca item untuk setiap order
+  const fullHistory = await Promise.all(
+    orders.map(async (order) => {
+      const items = await order.orderItems.fetch(); // Mengambil order_items terkait
+      return {
+        order,
+        items,
+      };
+    })
+  );
+
+  return fullHistory;
+};
