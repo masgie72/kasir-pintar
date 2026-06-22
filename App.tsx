@@ -4,10 +4,11 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ActivityIndicator, View, Text } from 'react-native';
+import { ActivityIndicator, View, Text, Image } from 'react-native';
 import { nanoid } from 'nanoid/non-secure';
 import { syncData } from './src/services/syncService';
 import NetInfo from '@react-native-community/netinfo';
+import LottieView from 'lottie-react-native';
 
 NetInfo.addEventListener(state => {
   if (state.isConnected) syncData();
@@ -34,7 +35,9 @@ const LoginScreen = React.lazy(() => import('./src/screens/LoginScreen'));
 const EditProductScreen = React.lazy(
   () => import('./src/screens/EditProductScreen'),
 );
-const RegisterScreen = React.lazy(() => import('./src/screens/admin/RegisterScreen'));
+const RegisterScreen = React.lazy(
+  () => import('./src/screens/admin/RegisterScreen'),
+);
 const SettingScreen = React.lazy(() => import('./src/screens/SettingScreen'));
 const PrinterSettingScreen = React.lazy(
   () => import('./src/screens/PrinterSettingScreen'),
@@ -152,8 +155,10 @@ export default function App() {
   const checkLoginStatus = async () => {
     const status = await AsyncStorage.getItem('isLoggedIn');
     const role = (await AsyncStorage.getItem('user_role')) || 'kasir'; // Mengambil role pendukung
+
     setUserRole(role);
     setIsLoggedIn(status === 'true');
+     return { isLoggedIn: status === 'true', role: role };
   };
 
   useEffect(() => {
@@ -186,12 +191,57 @@ export default function App() {
       <View
         style={{
           flex: 1,
+          backgroundColor: '#F8FAFC',
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: '#F8FAFC',
         }}
       >
-        <ActivityIndicator size="large" color="#3B82F6" />
+        {/* Kontainer Tengah: Animasi Lottie */}
+        <View
+          style={{ alignItems: 'center', transform: [{ translateY: -40 }] }}
+        >
+          <LottieView
+            source={require('./src/assets/splash-animation.json')}
+            autoPlay
+            loop
+            style={{ width: 240, height: 240 }}
+          />
+            <View style={{ alignItems: 'center', transform: [{ translateY: -40 }] }}>
+          <LottieView
+            source={require('./src/assets/loading.json')} // 👑 DIUBAH KE LOADING.JSON
+            autoPlay
+            loop
+            style={{ width: 240, height: 240 }} 
+          />
+          <Text style={{ marginTop: 12, fontSize: 15, fontWeight: '600', color: '#64748B', letterSpacing: 0.5 }}>
+            Memuat Sistem Kasir...
+          </Text>
+        </View>
+        </View>
+
+        {/* KONTAINER LOGO GAMBAR DI BAGIAN BAWAH LAYAR */}
+        <View
+          style={{ position: 'absolute', bottom: 40, alignItems: 'center' }}
+        >
+          <Text
+            style={{
+              fontSize: 11,
+              fontWeight: '700',
+              color: '#94A3B8',
+              textTransform: 'uppercase',
+              letterSpacing: 1.5,
+              marginBottom: 8,
+            }}
+          >
+            Powered By
+          </Text>
+          {/* Memanggil file gambar branding.png Anda */}
+          <Image
+            source={require('./src/assets/branding.png')}
+            style={{ width: 140, height: 45 }} // Sesuaikan lebar dan tinggi logo toko Anda di sini
+            resizeMode="contain" // Menjaga agar logo tidak gepeng/terdistorsi
+          />
+        </View>
       </View>
     );
   }
@@ -207,7 +257,7 @@ export default function App() {
           </View>
         }
       >
-                <Stack.Navigator>
+        <Stack.Navigator>
           {isLoggedIn ? (
             <>
               {/* PENGONDISIAN UTAMA BERDASARKAN USER ROLE (OWNER / ADMIN / KASIR) */}
@@ -251,10 +301,10 @@ export default function App() {
               )}
 
               {/* BARIS PERBAIKAN: Menempatkan Register di sini agar Owner/Admin bisa menambah karyawan baru */}
-              <Stack.Screen 
-                name="Register" 
-                component={RegisterScreen} 
-                options={{ title: 'Tambah Akun Karyawan' }}
+              <Stack.Screen
+                name="Register"
+                component={RegisterScreen}
+                options={{ title: 'Tambah Karyawan' }}
               />
 
               {/* Stack Screen pendukung lainnya */}
@@ -288,17 +338,13 @@ export default function App() {
             <>
               <Stack.Screen name="Login" options={{ headerShown: false }}>
                 {props => (
-                  <LoginScreen
-                    {...props}
-                    onLoginSuccess={checkLoginStatus} 
-                  />
+                  <LoginScreen {...props} onLoginSuccess={checkLoginStatus} />
                 )}
               </Stack.Screen>
               {/* Baris Register di sini sudah dihapus demi keamanan sistem login luar */}
             </>
           )}
         </Stack.Navigator>
-
       </Suspense>
     </NavigationContainer>
   );

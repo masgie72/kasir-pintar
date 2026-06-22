@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -20,7 +19,6 @@ import User from '../database/models/User';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SettingScreen() {
-  // 💡 Semua state diletakkan aman di dalam komponen utama
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserRole, setCurrentUserRole] = useState<string>('kasir');
@@ -39,7 +37,8 @@ export default function SettingScreen() {
   useEffect(() => {
     const initializeSettings = async () => {
       try {
-        const role = await AsyncStorage.getItem('userRole');
+        // Disesuaikan menggunakan 'user_role' agar sinkron dengan App.tsx & LoginScreen
+        const role = await AsyncStorage.getItem('user_role');
         setCurrentUserRole(role ?? 'kasir');
 
         const token = await AsyncStorage.getItem('adminTokenSecret');
@@ -69,7 +68,7 @@ export default function SettingScreen() {
   }, []);
 
   const handleOpenEdit = (user: User) => {
-    if (currentUserRole !== 'admin' && currentUserRole !== 'superuser') {
+    if (currentUserRole !== 'admin' && currentUserRole !== 'owner') {
       Alert.alert(
         'Akses Ditolak ⚠️',
         'Hanya akun administrator/pemilik yang boleh mengubah data kasir.',
@@ -84,7 +83,7 @@ export default function SettingScreen() {
   };
 
   const handleUpdateUser = async () => {
-    if (currentUserRole !== 'admin' && currentUserRole !== 'superuser') {
+    if (currentUserRole !== 'admin' && currentUserRole !== 'owner') {
       Alert.alert(
         'Akses Ditolak ⚠️',
         'Anda tidak memiliki hak akses memodifikasi data.',
@@ -126,14 +125,14 @@ export default function SettingScreen() {
   };
 
   const handleDeleteUser = (user: User) => {
-    if (user.role === 'superuser') {
+    if (user.role === 'owner') {
       Alert.alert(
         'Tindakan Ilegal ❌',
-        'Akun SuperUser utama sistem tidak dapat dihapus oleh siapa pun!',
+        'Akun Owner utama sistem tidak dapat dihapus oleh siapa pun!',
       );
       return;
     }
-    if (currentUserRole !== 'admin' && currentUserRole !== 'superuser') {
+    if (currentUserRole !== 'admin' && currentUserRole !== 'owner') {
       Alert.alert(
         'Akses Ditolak ⚠️',
         'Anda tidak memiliki otoritas menghapus data.',
@@ -222,9 +221,8 @@ export default function SettingScreen() {
                 </View>
               </View>
 
-              {/* 4. PROTEKSI UI: Sembunyikan tombol jika bukan Admin / SuperUser */}
-              {(currentUserRole === 'admin' ||
-                currentUserRole === 'superuser') && (
+              {/* PROTEKSI UI: Sembunyikan tombol aksi jika bukan Admin / Owner */}
+              {(currentUserRole === 'admin' || currentUserRole === 'owner') && (
                 <View style={styles.cardActions}>
                   <TouchableOpacity
                     style={styles.editButton}
@@ -242,20 +240,19 @@ export default function SettingScreen() {
               )}
 
               {/* Jika bukan pemilik toko, beri info penanda akses terkunci */}
-              {currentUserRole !== 'admin' &&
-                currentUserRole !== 'superuser' && (
-                  <View style={styles.cardActions}>
-                    <Text
-                      style={{
-                        color: '#94A3B8',
-                        fontSize: 12,
-                        fontStyle: 'italic',
-                      }}
-                    >
-                      🔒 Terkunci
-                    </Text>
-                  </View>
-                )}
+              {currentUserRole !== 'admin' && currentUserRole !== 'owner' && (
+                <View style={styles.cardActions}>
+                  <Text
+                    style={{
+                      color: '#94A3B8',
+                      fontSize: 12,
+                      fontStyle: 'italic',
+                    }}
+                  >
+                    🔒 Terkunci
+                  </Text>
+                </View>
+              )}
             </View>
           )}
         />
@@ -333,12 +330,10 @@ export default function SettingScreen() {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* 💡 PANEL KHUSUS SUPERUSER & ADMIN UNTUK MENGUBAH KODE RAHASIA */}
-      {(currentUserRole === 'superuser' || currentUserRole === 'admin') && (
+      {/* PANEL KHUSUS OWNER & ADMIN UNTUK MENGUBAH KODE RAHASIA */}
+      {(currentUserRole === 'owner' || currentUserRole === 'admin') && (
         <View style={styles.superUserPanel}>
-          <Text style={styles.panelTitle}>
-            Pengaturan Pemilik (SuperUser) 🔒
-          </Text>
+          <Text style={styles.panelTitle}>Pengaturan Pemilik (Owner) 🔒</Text>
           <Text style={styles.panelSubtitle}>
             Kode aktif saat ini:{' '}
             <Text style={{ fontWeight: '800' }}>{activeToken}</Text>
@@ -365,7 +360,6 @@ export default function SettingScreen() {
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
@@ -454,6 +448,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 20,
     elevation: 10,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
   },
   modalTitle: {
     fontSize: 18,
@@ -486,6 +481,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   btnCancel: {
+    flex: 1,
     backgroundColor: '#F1F5F9',
     paddingVertical: 14,
     borderRadius: 12,
@@ -493,6 +489,7 @@ const styles = StyleSheet.create({
   },
   btnCancelText: { color: '#475569', fontWeight: '700', fontSize: 15 },
   btnSubmit: {
+    flex: 1,
     backgroundColor: '#3B82F6',
     paddingVertical: 14,
     borderRadius: 12,
@@ -500,7 +497,6 @@ const styles = StyleSheet.create({
   },
   btnSubmitText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
 
-  // PANEL DINAMIS KODE RAHASIA
   superUserPanel: {
     backgroundColor: '#FFFBEB',
     borderWidth: 1,
@@ -545,4 +541,3 @@ const styles = StyleSheet.create({
   },
   btnSaveTokenText: { color: '#FFFFFF', fontWeight: '700', fontSize: 13 },
 });
-

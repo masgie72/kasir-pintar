@@ -102,7 +102,6 @@ export default function KasirScreen({ navigation, route }: any) {
     }
   };
 
-
   const handleLogout = async () => {
     const triggerLogoutPusat = route.params?.onLogoutSuccess;
 
@@ -113,14 +112,14 @@ export default function KasirScreen({ navigation, route }: any) {
         style: 'destructive',
         onPress: async () => {
           try {
+            // 1. Bersihkan session data
             await AsyncStorage.removeItem('isLoggedIn');
             await AsyncStorage.removeItem('user_role');
             await AsyncStorage.removeItem('user_name');
-
+            
+            // 2. Cukup pemicu fungsi pusat. Pengalihan ke Login terjadi OTOMATIS lewat App.tsx
             if (triggerLogoutPusat) {
-              triggerLogoutPusat();
-            } else {
-              navigation.replace('Login');
+              triggerLogoutPusat(); 
             }
           } catch (e) {
             Alert.alert('Error', 'Gagal memproses logout.');

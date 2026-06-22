@@ -18,12 +18,12 @@ export default function RegisterScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
-  const [role, setRole] = useState<'admin' | 'kasir'>('kasir'); 
-  const [adminToken, setAdminToken] = useState(''); 
+  const [role, setRole] = useState<'admin' | 'kasir'>('kasir');
+  const [adminToken, setAdminToken] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // Kunci kode rahasia admin toko Anda
-  const KUNCI_RAHASIA_ADMIN = "DESWITA_INTAN_72"; 
+  const KUNCI_RAHASIA_ADMIN = 'DESWITA_INTAN_72';
 
   const handleRegister = async () => {
     // 1. Validasi Input Kosong
@@ -53,19 +53,33 @@ export default function RegisterScreen({ navigation }: any) {
 
     // 5. Validasi Token Rahasia Khusus Admin
     if (role === 'admin' && adminToken.trim() !== KUNCI_RAHASIA_ADMIN) {
-      Alert.alert('Akses Ditolak ❌', 'Kode Rahasia Admin salah! Anda tidak diizinkan membuat akun administrator.');
+      Alert.alert(
+        'Akses Ditolak ❌',
+        'Kode Rahasia Admin salah! Anda tidak diizinkan membuat akun administrator.',
+      );
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // 6. Eksekusi penyimpanan ke WatermelonDB via userService
+      // Eksekusi penyimpanan data ke WatermelonDB via userService
       await createUser(name.trim(), email.toLowerCase().trim(), pin, role);
-      
-      Alert.alert('Berhasil 🎉', `Akun [${role.toUpperCase()}] berhasil didaftarkan!`, [
-        { text: 'OK', onPress: () => navigation.navigate('Login') }
-      ]);
+
+      // PERBAIKAN: Hapus navigation.navigate('Login') dari tombol OK
+      Alert.alert(
+        'Berhasil 🎉',
+        `Akun [${role.toUpperCase()}] berhasil didaftarkan!`,
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              // Cukup kembalikan layar admin ke halaman Dashboard sebelumnya
+              navigation.goBack();
+            },
+          },
+        ],
+      );
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'Terjadi kesalahan saat menyimpan data.');
@@ -79,17 +93,20 @@ export default function RegisterScreen({ navigation }: any) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header Visual */}
         <View style={styles.headerContainer}>
           <Text style={styles.title}>Daftar Akun Baru</Text>
-          <Text style={styles.subtitle}>Buat akun untuk mulai mengelola akses sistem kasir toko Anda.</Text>
+          <Text style={styles.subtitle}>
+            Buat akun untuk mulai mengelola akses sistem kasir toko Anda.
+          </Text>
         </View>
 
         {/* Form Input */}
         <View style={styles.formContainer}>
-          
           {/* Input Nama */}
           <Text style={styles.label}>Nama Lengkap</Text>
           <TextInput
@@ -116,26 +133,51 @@ export default function RegisterScreen({ navigation }: any) {
           <Text style={styles.label}>Tingkatan Hak Akses (Role)</Text>
           <View style={styles.roleSelectorRow}>
             <TouchableOpacity
-              style={[styles.roleOptionCard, role === 'kasir' && styles.roleOptionCardActive]}
+              style={[
+                styles.roleOptionCard,
+                role === 'kasir' && styles.roleOptionCardActive,
+              ]}
               onPress={() => setRole('kasir')}
             >
-              <Text style={[styles.roleOptionTitle, role === 'kasir' && styles.textActive]}>🛒 Kasir</Text>
+              <Text
+                style={[
+                  styles.roleOptionTitle,
+                  role === 'kasir' && styles.textActive,
+                ]}
+              >
+                🛒 Kasir
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.roleOptionCard, role === 'admin' && styles.roleOptionCardActive]}
+              style={[
+                styles.roleOptionCard,
+                role === 'admin' && styles.roleOptionCardActive,
+              ]}
               onPress={() => setRole('admin')}
             >
-              <Text style={[styles.roleOptionTitle, role === 'admin' && styles.textActive]}>🛠️ Admin</Text>
+              <Text
+                style={[
+                  styles.roleOptionTitle,
+                  role === 'admin' && styles.textActive,
+                ]}
+              >
+                🛠️ Admin
+              </Text>
             </TouchableOpacity>
           </View>
 
           {/* Input Kode Rahasia Admin */}
           {role === 'admin' && (
             <View>
-              <Text style={[styles.label, { color: '#EF4444' }]}>Kode Rahasia Admin 店</Text>
+              <Text style={[styles.label, { color: '#EF4444' }]}>
+                Kode Rahasia Admin 店
+              </Text>
               <TextInput
-                style={[styles.input, { borderColor: '#FCA5A5', backgroundColor: '#FEF2F2' }]}
+                style={[
+                  styles.input,
+                  { borderColor: '#FCA5A5', backgroundColor: '#FEF2F2' },
+                ]}
                 placeholder="Masukkan token otentikasi pemilik"
                 placeholderTextColor="#FCA3A3"
                 secureTextEntry
@@ -172,8 +214,8 @@ export default function RegisterScreen({ navigation }: any) {
           />
 
           {/* Tombol Register */}
-          <TouchableOpacity 
-            style={[styles.button, isLoading && styles.buttonDisabled]} 
+          <TouchableOpacity
+            style={[styles.button, isLoading && styles.buttonDisabled]}
             onPress={handleRegister}
             disabled={isLoading}
           >
@@ -191,7 +233,6 @@ export default function RegisterScreen({ navigation }: any) {
               <Text style={styles.loginLink}>Masuk di sini</Text>
             </TouchableOpacity>
           </View>
-
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

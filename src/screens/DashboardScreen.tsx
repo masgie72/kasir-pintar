@@ -20,9 +20,11 @@ type Props = {
 
 export default function DashboardScreen({
   navigation,
-  onLogoutSuccess,
+  onLogoutSuccess, 
 }: Props) {
+  // 1. Tambahkan state dinamis untuk nama dan role user
   const [userName, setUserName] = useState('Kasir');
+  const [userRole, setUserRole] = useState('kasir');
   const [loading, setLoading] = useState(true);
 
   // State untuk data grafik penjualan (7 hari terakhir)
@@ -37,35 +39,51 @@ export default function DashboardScreen({
   ]);
 
   useEffect(() => {
-    // 1. Ambil Nama User yang sedang login dari AsyncStorage/Database
+    // 2. Ambil data nama dan role dari AsyncStorage secara dinamis
     const getUserData = async () => {
       try {
-        const savedName = await AsyncStorage.getItem('user_name'); // Sesuaikan key Anda
-        if (savedName) setUserName(savedName);
+        const savedName = await AsyncStorage.getItem('user_name');
+        const savedRole = (await AsyncStorage.getItem('user_role')) || 'kasir';
+
+        if (savedName) setUserName(savedName); // Mengeset nama asli user
+        setUserRole(savedRole);
       } catch (e) {
-        console.error(e);
+        console.error('Gagal mengambil data user:', e);
       }
     };
 
-    // 2. Ambil data penjualan secara real-time dari WatermelonDB untuk grafik
+    
+     // 2. KALKULASI DINAMIS: Menghitung Omzet Asli 7 Hari Terakhir dari WatermelonDB
     const subSales = database
-      .get('orders') // Sesuaikan dengan nama tabel/collection order Anda
+      .get('orders')
       .query()
       .observe()
       .subscribe({
         next: (orders: any[]) => {
-          // Logika dummy pembagian omzet mingguan berdasarkan data order nyata
-          // Anda bisa menyesuaikan filter tanggal berdasarkan field created_at order Anda
-          const nominalSenin = orders.length * 150000; // Contoh kalkulasi dinamis
+          // Buat wadah penghitung omzet per hari (0 = Minggu, 1 = Senin, dst)
+          const omzetPerHari = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
 
-          setSalesData([
-            { day: 'Sen', total: nominalSenin > 0 ? nominalSenin : 450000 },
-            { day: 'Sel', total: 320000 },
-            { day: 'Rab', total: 600000 },
-            { day: 'Kam', total: 150000 },
-            { day: 'Jum', total: 750000 },
-            { day: 'Sab', total: 900000 },
-            { day: 'Min', total: 400000 },
+           orders.forEach(order => {
+            // 1. Konversi timestamp number dari skema database ke objek tanggal
+            const tanggalOrder = new Date(Number(order.createdAt || order.created_at));
+            const hariKe = tanggalOrder.getDay(); 
+            const harga = Number(order.totalPrice || order.total_price || 0);
+
+            // PERBAIKAN: Tambahkan 'as 0 | 1 | 2 | 3 | 4 | 5 | 6' agar TypeScript tidak komplain
+            const indeksHari = hariKe as 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+            // Akumulasikan total harga pesanan ke hari yang sesuai
+            omzetPerHari[indeksHari] += harga;
+          });
+
+           setSalesData([
+            { day: 'Sen', total: omzetPerHari[1] },
+            { day: 'Sel', total: omzetPerHari[2] },
+            { day: 'Rab', total: omzetPerHari[3] },
+            { day: 'Kam', total: omzetPerHari[4] },
+            { day: 'Jum', total: omzetPerHari[5] },
+            { day: 'Sab', total: omzetPerHari[6] },
+            { day: 'Min', total: omzetPerHari[0] },
           ]);
           setLoading(false);
         },
@@ -76,37 +94,49 @@ export default function DashboardScreen({
     return () => subSales.unsubscribe();
   }, []);
 
-  // Mencari nilai tertinggi untuk skala persentase tinggi grafik
   const maxSale = Math.max(...salesData.map(d => d.total), 1);
 
-  const handleLogout = async () => {
+   const handleLogout = async () => {
     Alert.alert('Keluar', 'Apakah Anda yakin ingin keluar?', [
       { text: 'Batal', style: 'cancel' },
       {
         text: 'Keluar',
         style: 'destructive',
         onPress: async () => {
-          await AsyncStorage.removeItem('isLoggedIn');
-          onLogoutSuccess?.();
+          try {
+            // 1. Bersihkan session data lokal
+            await AsyncStorage.removeItem('isLoggedIn');
+            await AsyncStorage.removeItem('user_role');
+            await AsyncStorage.removeItem('user_name');
+            
+            // 2. Langsung pemicu fungsi logout bawaan dari props
+            if (onLogoutSuccess) {
+              onLogoutSuccess();
+            } else {
+              // Cadangan darurat jika props terlepas, paksa balik ke login via state navigasi dasar
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+              });
+            }
+          } catch (e) {
+            console.error('Gagal memproses logout dashboard:', e);
+          }
         },
       },
     ]);
   };
 
+
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      {/* HEADER WITH USERNAME */}
+      {/* HEADER WITH DYNAMIC USERNAME */}
       <View style={styles.header}>
         <View style={styles.profileSection}>
-          <TouchableOpacity
-            style={styles.avatarPlaceholder}
-            onPress={() => navigation.navigate('Setting')}
-          >
-            <Text style={styles.avatarText}>⚙</Text>
-          </TouchableOpacity>
           <View>
             <Text style={styles.headerSubtitle}>Selamat Datang,</Text>
-            {/* Menampilkan Nama User Secara Dinamis */}
+            {/* 3. Menampilkan Nama User asli dari database hasil login */}
             <Text style={styles.headerTitle}>{userName} 💼</Text>
           </View>
         </View>
@@ -119,10 +149,9 @@ export default function DashboardScreen({
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* KONTEN GRAFIK PENJUALAN MINGGUAN */}
+        {/* GRAFIK OMZET */}
         <View style={styles.chartCard}>
           <Text style={styles.chartTitle}>Grafik Omzet Mingguan</Text>
-
           {loading ? (
             <ActivityIndicator
               size="small"
@@ -132,9 +161,7 @@ export default function DashboardScreen({
           ) : (
             <View style={styles.chartWrapper}>
               {salesData.map((item, index) => {
-                // Hitung tinggi batang secara proporsional (Maksimal 120px)
                 const barHeight = (item.total / maxSale) * 120;
-
                 return (
                   <View key={index} style={styles.barContainer}>
                     <View style={styles.barBackground}>
@@ -148,20 +175,37 @@ export default function DashboardScreen({
           )}
         </View>
 
-        {/* MENU CEPAT SEKUNDER */}
+        {/* MENU CEPAT SEKUNDER BERDASARKAN HAK AKSES */}
         <View style={styles.menuGrid}>
-          <TouchableOpacity
-            style={[
-              styles.menuCard,
-              { backgroundColor: '#ECFDF5', width: '100%' },
-            ]}
-            onPress={() => navigation.navigate('Report')}
-          >
-            <Text style={styles.menuIcon}>📊</Text>
-            <Text style={[styles.menuText, { color: '#047857' }]}>
-              Laporan Omzet
-            </Text>
-          </TouchableOpacity>
+          {(userRole === 'owner' || userRole === 'admin') && (
+            <TouchableOpacity
+              style={[
+                styles.menuCard,
+                { backgroundColor: '#EFF6FF', width: '100%' },
+              ]}
+              onPress={() => navigation.navigate('Register')}
+            >
+              <Text style={styles.menuIcon}>👤</Text>
+              <Text style={[styles.menuText, { color: '#2563EB' }]}>
+                Tambah Karyawan Baru
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {userRole === 'owner' && (
+            <TouchableOpacity
+              style={[
+                styles.menuCard,
+                { backgroundColor: '#ECFDF5', width: '100%' },
+              ]}
+              onPress={() => navigation.navigate('Report')}
+            >
+              <Text style={styles.menuIcon}>📊</Text>
+              <Text style={[styles.menuText, { color: '#047857' }]}>
+                Laporan Omzet
+              </Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={[styles.menuCard, { backgroundColor: '#FEF3C7' }]}
@@ -229,8 +273,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scrollContainer: { padding: 16 },
-
-  // Style Baru untuk Grafik Kustom
   chartCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
@@ -267,7 +309,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   barLabel: { fontSize: 11, color: '#64748B', marginTop: 8, fontWeight: '600' },
-
   menuGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

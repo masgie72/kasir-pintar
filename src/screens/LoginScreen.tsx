@@ -52,7 +52,8 @@ export default function LoginScreen({ navigation, onLoginSuccess }: Props) {
         if (user.pinHash === hashedInput) {
           await saveUserSession(user.id);
           await AsyncStorage.setItem('isLoggedIn', 'true');
-          await AsyncStorage.setItem('user_role', user.role);
+          await AsyncStorage.setItem('user_role', user.role); 
+          await AsyncStorage.setItem('user_name', user.name);
           onLoginSuccess();
         } else {
           Alert.alert('Gagal', 'PIN salah!');
