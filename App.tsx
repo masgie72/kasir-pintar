@@ -207,14 +207,27 @@ export default function App() {
           </View>
         }
       >
-        <Stack.Navigator>
+                <Stack.Navigator>
           {isLoggedIn ? (
             <>
-              {/* PENGONDISIAN UTAMA BERDASARKAN USER ROLE */}
+              {/* PENGONDISIAN UTAMA BERDASARKAN USER ROLE (OWNER / ADMIN / KASIR) */}
               {userRole === 'owner' ? (
                 <Stack.Screen name="MainTabs" options={{ headerShown: false }}>
                   {props => (
                     <OwnerTabNavigator
+                      {...props}
+                      route={{
+                        ...props.route,
+                        params: { onLogoutSuccess: checkLoginStatus },
+                      }}
+                    />
+                  )}
+                </Stack.Screen>
+              ) : userRole === 'admin' ? (
+                // Menambahkan pengondisian rute jika yang masuk adalah Admin Toko
+                <Stack.Screen name="MainTabs" options={{ headerShown: false }}>
+                  {props => (
+                    <OwnerTabNavigator // Admin menggunakan navigator yang sama dengan Owner agar bisa kelola stok
                       {...props}
                       route={{
                         ...props.route,
@@ -236,6 +249,13 @@ export default function App() {
                   )}
                 </Stack.Screen>
               )}
+
+              {/* BARIS PERBAIKAN: Menempatkan Register di sini agar Owner/Admin bisa menambah karyawan baru */}
+              <Stack.Screen 
+                name="Register" 
+                component={RegisterScreen} 
+                options={{ title: 'Tambah Akun Karyawan' }}
+              />
 
               {/* Stack Screen pendukung lainnya */}
               <Stack.Screen
@@ -270,14 +290,15 @@ export default function App() {
                 {props => (
                   <LoginScreen
                     {...props}
-                    onLoginSuccess={checkLoginStatus} // Memicu fungsi refresh status setelah login sukses
+                    onLoginSuccess={checkLoginStatus} 
                   />
                 )}
               </Stack.Screen>
-              <Stack.Screen name="Register" component={RegisterScreen} />
+              {/* Baris Register di sini sudah dihapus demi keamanan sistem login luar */}
             </>
           )}
         </Stack.Navigator>
+
       </Suspense>
     </NavigationContainer>
   );
