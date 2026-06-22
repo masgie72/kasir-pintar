@@ -1,73 +1,76 @@
-
 import { Q } from '@nozbe/watermelondb';
-
-import { database } from '../database'; // Sesuaikan dengan jalur file inisialisasi database Anda
+import { database } from '../database'; 
 import User from '../database/models/User';
-import SHA256 from 'crypto-js/sha256'; 
-
+import PBKDF2 from 'crypto-js/pbkdf2'; // Mengubah SHA256 menjadi PBKDF2
 
 const usersCollection = database.get<User>('users');
+const SALT_KEY = 'toko-intan-salt-2026'; // Salt yang sama seperti di Login & Seeder
 
-// 1. CREATE - Menambah User Baru
+// Fungsi pembantu untuk standarisasi enkripsi PIN di seluruh sistem toko
+const hashPinSecurity = (pin: string): string => {
+  return PBKDF2(pin, SALT_KEY, {
+    keySize: 256 / 32,
+    iterations: 10000,
+  }).toString();
+};
+
+// 1. CREATE - Menambah User Baru (Dipanggil oleh RegisterScreen)
 export const createUser = async (name: string, email: string, pin: string, role: string) => {
-  const hashedPassword = SHA256(pin).toString();
+  const hashedPin = hashPinSecurity(pin);
 
-  const { database } = require('../database'); 
-  
   await database.write(async () => {
-    await database.get('users').create((newUser: any) => {
+    await usersCollection.create((newUser: any) => {
       newUser.name = name;
-      newUser.email = email;
-      newUser.pin = hashedPassword;
+      newUser.email = email.toLowerCase().trim();
+      newUser.pinHash = hashedPin; // Disesuaikan dengan field 'pinHash' pada model User Anda
       newUser.role = role; 
+      newUser.isActive = true;
+      newUser.updatedAt = new Date();
+      newUser.isSynced = false;
     });
   });
 };
-// 2. READ - Mengambil Semua User (Gunakan .observe() di UI untuk sinkronisasi otomatis)
+
+// 2. READ - Mengambil Semua User 
 export const getAllUsers = () => {
   return usersCollection.query();
 };
 
 // 3. UPDATE - Memperbarui Data User
 export const updateUser = async (user: User, updatedData: { name?: string; email?: string; pin?: string }): Promise<void> => {
-  const { database } = require('../database'); 
   await database.write(async () => {
-    await user.update((u) => {
+    await user.update((u: any) => {
       if (updatedData.name !== undefined) u.name = updatedData.name;
-      if (updatedData.email !== undefined) u.email = updatedData.email;
+      if (updatedData.email !== undefined) u.email = updatedData.email.toLowerCase().trim();
       if (updatedData.pin !== undefined) {
-        u.pin = SHA256(updatedData.pin).toString();
-      };
+        u.pinHash = hashPinSecurity(updatedData.pin);
+      }
+      u.updatedAt = new Date();
     });
   });
 };
 
 // 4. DELETE - Menghapus User
 export const deleteUser = async (user: User): Promise<void> => {
-  const { database } = require('../database'); 
   await database.write(async () => {
-    await user.markAsDeleted(); // Menghapus secara lokal dan siap disinkronisasikan jika menggunakan fitur sync
-    // atau gunakan: await user.destroyPermanently(); jika ingin langsung terhapus permanen dari database lokal
+    await user.markAsDeleted(); // Memicu soft delete agar aman disinkronkan ke cloud backend nanti
   });
 };
+
+// 5. VALIDASI LOGIN
 export const verifyUserLogin = async (email: string, inputPin: string): Promise<boolean> => {
   try {
-    const hashedInput = SHA256(inputPin).toString(); // Enkripsi PIN yang dimasukkan kasir
-     const { database } = require('../database');
-    const usersCollection = database.get('users');
+    const hashedInput = hashPinSecurity(inputPin);
     
-   const users = await usersCollection
+    const users = await usersCollection
       .query(Q.where('email', email.toLowerCase().trim()))
       .fetch();
 
-    if (users.length === 0) return false; // User tidak ditemukan
+    if (users.length === 0) return false;
 
     const user = users[0];
-
-    // Bandingkan hash input dengan hash di database
-    return user.pin === hashedInput; 
+    return user.pinHash === hashedInput; 
   } catch (error) {
     return false;
   }
-
 };

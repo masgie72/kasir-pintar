@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   StyleSheet,
@@ -12,18 +11,18 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { createUser } from '../services/userService'; // 💡 Pastikan file service Anda diperbarui untuk menerima parameter 'role'
+import { createUser } from '../../services/userService'; // Jalur import 2 tingkat dari folder admin
 
 export default function RegisterScreen({ navigation }: any) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
-  const [role, setRole] = useState<'admin' | 'kasir'>('kasir'); // 💡 State untuk role akun
-  const [adminToken, setAdminToken] = useState(''); // 💡 State untuk kode rahasia admin
+  const [role, setRole] = useState<'admin' | 'kasir'>('kasir'); 
+  const [adminToken, setAdminToken] = useState(''); 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Kunci kode rahasia admin toko Anda (Silakan ubah sesuai keinginan Anda)
+  // Kunci kode rahasia admin toko Anda
   const KUNCI_RAHASIA_ADMIN = "DESWITA_INTAN_72"; 
 
   const handleRegister = async () => {
@@ -40,7 +39,7 @@ export default function RegisterScreen({ navigation }: any) {
       return;
     }
 
-    // 3. Validasi Panjang PIN Kasir
+    // 3. Validasi Panjang PIN
     if (pin.length !== 6) {
       Alert.alert('Gagal', 'PIN harus terdiri dari 6 angka!');
       return;
@@ -52,7 +51,7 @@ export default function RegisterScreen({ navigation }: any) {
       return;
     }
 
-    // 5. 💡 Validasi Token Rahasia Khusus Pendaftaran Admin
+    // 5. Validasi Token Rahasia Khusus Admin
     if (role === 'admin' && adminToken.trim() !== KUNCI_RAHASIA_ADMIN) {
       Alert.alert('Akses Ditolak ❌', 'Kode Rahasia Admin salah! Anda tidak diizinkan membuat akun administrator.');
       return;
@@ -61,8 +60,7 @@ export default function RegisterScreen({ navigation }: any) {
     setIsLoading(true);
 
     try {
-      // 6. 💡 Eksekusi penyimpanan ke WatermelonDB dengan menyertakan variabel 'role'
-      // Pastikan fungsi createUser(name, email, pin, role) di file service Anda sudah ditambahkan parameter keempat
+      // 6. Eksekusi penyimpanan ke WatermelonDB via userService
       await createUser(name.trim(), email.toLowerCase().trim(), pin, role);
       
       Alert.alert('Berhasil 🎉', `Akun [${role.toUpperCase()}] berhasil didaftarkan!`, [
@@ -114,7 +112,7 @@ export default function RegisterScreen({ navigation }: any) {
             onChangeText={setEmail}
           />
 
-          {/* 💡 SELEKTOR PILIHAN ROLE (HAK AKSES) */}
+          {/* Selektor Pilihan Role */}
           <Text style={styles.label}>Tingkatan Hak Akses (Role)</Text>
           <View style={styles.roleSelectorRow}>
             <TouchableOpacity
@@ -132,7 +130,7 @@ export default function RegisterScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
 
-          {/* 💡 INPUT KODE RAHASIA (Hanya muncul jika memilih role Admin) */}
+          {/* Input Kode Rahasia Admin */}
           {role === 'admin' && (
             <View>
               <Text style={[styles.label, { color: '#EF4444' }]}>Kode Rahasia Admin 店</Text>
@@ -255,8 +253,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
-  
-  // Desain Komponen Selektor Role Baru
   roleSelectorRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -285,7 +281,6 @@ const styles = StyleSheet.create({
   textActive: {
     color: '#3B82F6',
   },
-
   button: {
     backgroundColor: '#3B82F6',
     borderRadius: 10,
@@ -321,4 +316,3 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
-
