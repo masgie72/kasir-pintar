@@ -77,6 +77,10 @@ When you want to forcefully reload, for example to reset the state of your app, 
 
 You've successfully run and modified your React Native App. :partying_face:
 
+donasi: 6285326596518
+<img width="1136" height="1600" alt="QRCODE" src="https://github.com/user-attachments/assets/d8c93b40-c11e-4831-b42c-13caf57f7c6f" />
+
+
 ### Now what?
 
 - If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
