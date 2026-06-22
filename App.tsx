@@ -34,7 +34,7 @@ const LoginScreen = React.lazy(() => import('./src/screens/LoginScreen'));
 const EditProductScreen = React.lazy(
   () => import('./src/screens/EditProductScreen'),
 );
-const RegisterScreen = React.lazy(() => import('./src/screens/RegisterScreen'));
+const RegisterScreen = React.lazy(() => import('./src/screens/admin/RegisterScreen'));
 const SettingScreen = React.lazy(() => import('./src/screens/SettingScreen'));
 const PrinterSettingScreen = React.lazy(
   () => import('./src/screens/PrinterSettingScreen'),

@@ -19,7 +19,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNBluetoothClassic from 'react-native-bluetooth-classic';
 import LogoutIcon from '../assets/icons/logout.svg';
 
-type Props = { navigation: any; onLogoutSuccess: () => void };
 const { width } = Dimensions.get('window');
 const numColumns = width > 768 ? 4 : width > 480 ? 3 : 2;
 
@@ -47,7 +46,7 @@ const jalankanCetakStruk = async (itemsBelanja: any[], totalHarga: number) => {
   } catch {}
 };
 
-export default function KasirScreen({ navigation, onLogoutSuccess }: Props) {
+export default function KasirScreen({ navigation, route }: any) {
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,28 +75,56 @@ export default function KasirScreen({ navigation, onLogoutSuccess }: Props) {
   const totalPrice = items.reduce((s, i) => s + i.price * i.quantity, 0);
   const totalItems = items.reduce((s, i) => s + i.quantity, 0);
 
-  // BAGIAN YANG DIPERBAIKI: Mengambil deviceId dan menyertakannya ke createOrder
-  const handleCheckout = async () => {
+   const handleCheckout = async () => {
     if (!items.length) return;
     try {
       const deviceId = (await AsyncStorage.getItem('device_id')) || 'UNKNOWN';
       await createOrder('kasir_01', totalPrice, items, deviceId);
       await jalankanCetakStruk(items, totalPrice);
-      clearCart();
-      Alert.alert('Sukses', 'Transaksi berhasil');
+      
+      // PERBAIKAN: Tampilkan alert dulu, berikan callback ketika tombol OK ditekan
+      Alert.alert(
+        'Sukses', 
+        'Transaksi berhasil',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              // Keranjang baru dikosongkan setelah Alert tertutup dengan aman
+              clearCart();
+            }
+          }
+        ]
+      );
+      
     } catch (e: any) {
       Alert.alert('Gagal', e.message);
     }
   };
 
+
   const handleLogout = async () => {
-    Alert.alert('Keluar', 'Yakin?', [
-      { text: 'Batal' },
+    const triggerLogoutPusat = route.params?.onLogoutSuccess;
+
+    Alert.alert('Keluar', 'Apakah Anda yakin ingin keluar dari akun?', [
+      { text: 'Batal', style: 'cancel' },
       {
         text: 'Keluar',
+        style: 'destructive',
         onPress: async () => {
-          await AsyncStorage.removeItem('isLoggedIn');
-          onLogoutSuccess();
+          try {
+            await AsyncStorage.removeItem('isLoggedIn');
+            await AsyncStorage.removeItem('user_role');
+            await AsyncStorage.removeItem('user_name');
+
+            if (triggerLogoutPusat) {
+              triggerLogoutPusat();
+            } else {
+              navigation.replace('Login');
+            }
+          } catch (e) {
+            Alert.alert('Error', 'Gagal memproses logout.');
+          }
         },
       },
     ]);
@@ -110,7 +137,7 @@ export default function KasirScreen({ navigation, onLogoutSuccess }: Props) {
     const lowStock = stock <= 3;
 
     return (
-      <View style={styles.card}>
+      <View style={styles.card} key={p.id}>
         <View style={styles.cardTop}>
           <Text numberOfLines={2} style={styles.name}>
             {p.name}
@@ -233,7 +260,6 @@ export default function KasirScreen({ navigation, onLogoutSuccess }: Props) {
   );
 }
 
-// MELENGKAPI KODE STYLES YANG TERPOTONG
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
@@ -243,18 +269,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderColor: '#F1F5F9',
   },
   hi: { fontSize: 22, fontWeight: '800', color: '#0F172A' },
   sub: { fontSize: 13, color: '#64748B', marginTop: 2 },
   headerActions: { flexDirection: 'row', gap: 8 },
-  iconBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: '#F1F5F9',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   logout: {
     width: 38,
     height: 38,
