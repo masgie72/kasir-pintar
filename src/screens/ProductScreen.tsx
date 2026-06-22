@@ -14,9 +14,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { database } from '../database';
-import TrashIcon from './src/assets/icons/Trash.svg'; // Sesuaikan relative path (../) dengan lokasi file ini
+import TrashIcon from './src/assets/icons/Trash.svg'; // Menyesuaikan path Anda
+import EditIcon from './src/assets/icons/Edit.svg'; // Impor ikon edit baru
 
-export default function ProductScreen() {
+export default function ProductScreen({ navigation }: any) {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -99,10 +100,8 @@ export default function ProductScreen() {
           onPress: async () => {
             try {
               await database.write(async () => {
-                // Jika ingin siap disinkronisasikan ke backend API nanti:
+                // Menggunakan mekanisme soft delete WatermelonDB untuk sinkronisasi
                 await product.markAsDeleted();
-                // Jika ingin hapus permanen lokal langsung tanpa sync:
-                // await product.destroyPermanently();
               });
               Alert.alert('Sukses', 'Produk berhasil dihapus.');
             } catch (error) {
@@ -174,7 +173,7 @@ export default function ProductScreen() {
                 <Text style={styles.productPrice}>
                   Rp {Number(item.price).toLocaleString('id-ID')}
                 </Text>
-                {/* Indikator Stok Menipis (Modern UX) */}
+                {/* Indikator Stok Menipis */}
                 <View
                   style={[
                     styles.stockBadge,
@@ -194,13 +193,26 @@ export default function ProductScreen() {
                 </View>
               </View>
 
-              {/* Tombol Aksi Hapus */}
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => handleDeleteProduct(item)}
-              >
-                <TrashIcon width={24} height={24} fill="#FF0000" />
-              </TouchableOpacity>
+              {/* Kontainer Tombol Aksi di Sebelah Kanan */}
+              <View style={styles.actionContainer}>
+                {/* Tombol Aksi Edit */}
+                <TouchableOpacity
+                  style={styles.editButton}
+                  onPress={() =>
+                    navigation.navigate('EditProduct', { product: item })
+                  }
+                >
+                  <EditIcon width={24} height={24} fill="#3B82F6" />
+                </TouchableOpacity>
+
+                {/* Tombol Aksi Hapus */}
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => handleDeleteProduct(item)}
+                >
+                  <TrashIcon width={24} height={24} fill="#FF0000" />
+                </TouchableOpacity>
+              </View>
             </View>
           )}
         />
@@ -260,7 +272,7 @@ export default function ProductScreen() {
                 disabled={isSaving}
               >
                 {isSaving ? (
-                  <ActivityIndicator color="#FFF" size="small" />
+                  <ActivityIndicator size="small" color="#fff" />
                 ) : (
                   <Text style={styles.btnSubmitText}>Simpan</Text>
                 )}
@@ -280,150 +292,125 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    paddingTop: 20,
+    paddingBottom: 10,
   },
-  headerTitle: { fontSize: 22, fontWeight: '800', color: '#0F172A' },
-  headerSubtitle: { fontSize: 13, color: '#64748B', marginTop: 2 },
+  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#1E293B' },
+  headerSubtitle: { fontSize: 14, color: '#64748B', marginTop: 2 },
   addButton: {
     backgroundColor: '#3B82F6',
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 10,
+    borderRadius: 8,
   },
-  addButtonText: { color: '#FFF', fontWeight: '700', fontSize: 14 },
-
+  addButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 14 },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginTop: 14,
-    marginBottom: 6,
-    borderRadius: 12,
-    paddingHorizontal: 14,
+    backgroundColor: '#FFF',
+    marginHorizontal: 20,
+    marginVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    height: 48,
   },
-  searchIcon: { marginRight: 8, fontSize: 15 },
-  searchInput: { flex: 1, color: '#0F172A', fontSize: 15, padding: 0 },
-  clearButtonText: { color: '#94A3B8', fontSize: 14, fontWeight: 'bold' },
-
-  listContainer: { padding: 16, paddingBottom: 40 },
+  searchIcon: { fontSize: 16, marginRight: 8 },
+  searchInput: { flex: 1, height: 44, color: '#1E293B', fontSize: 14 },
+  clearButtonText: { fontSize: 16, color: '#94A3B8', paddingHorizontal: 5 },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 40,
+    padding: 20,
   },
-  emptyText: { color: '#64748B', fontSize: 14, fontWeight: '500' },
-
+  emptyText: { color: '#64748B', fontSize: 16, textAlign: 'center' },
+  listContainer: { paddingHorizontal: 20, paddingBottom: 20 },
   productCard: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FFF',
     padding: 16,
-    borderRadius: 16,
+    borderRadius: 12,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.02,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  productInfo: { flex: 1, alignItems: 'flex-start' },
-  productName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1E293B',
-    marginBottom: 2,
-  },
-  productPrice: {
-    fontSize: 15,
-    color: '#2563EB',
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  stockBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  stockNormal: { backgroundColor: '#F0FDF4' },
-  stockLow: { backgroundColor: '#FEF2F2' },
-  stockText: { fontSize: 12, fontWeight: '600' },
-  stockTextNormal: { color: '#166534' },
-  stockTextLow: { color: '#991B1B' },
-  deleteButton: {
-    padding: 10,
-    backgroundColor: '#FFF5F5',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#FEE2E2',
-  },
-  deleteButtonText: { fontSize: 16 },
-  // STYLING MODAL FORM
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.4)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#0F172A',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  inputLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#475569',
-    marginBottom: 6,
-    marginTop: 10,
-  },
-  input: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: '#0F172A',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
-  modalActions: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 24,
-    marginBottom: 12,
+  productInfo: { flex: 1 },
+  productName: { fontSize: 16, fontWeight: 'bold', color: '#1E293B' },
+  productPrice: {
+    fontSize: 14,
+    color: '#3B82F6',
+    fontWeight: '600',
+    marginTop: 4,
   },
+  stockBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginTop: 8,
+  },
+  stockNormal: { backgroundColor: '#DCFCE7' },
+  stockLow: { backgroundColor: '#FEE2E2' },
+  stockText: { fontSize: 12, fontWeight: '600' },
+  stockTextNormal: { color: '#15803D' },
+  stockTextLow: { color: '#B91C1C' },
+  actionContainer: { flexDirection: 'row', alignItems: 'center' },
+  editButton: { padding: 8, marginRight: 4 },
+  deleteButton: { padding: 8 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1E293B',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#475569',
+    marginBottom: 6,
+  },
+  input: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    color: '#1E293B',
+    marginBottom: 16,
+  },
+  modalActions: { flexDirection: 'row', marginTop: 8 },
   btnCancel: {
     flex: 1,
     backgroundColor: '#F1F5F9',
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 8,
     alignItems: 'center',
+    marginRight: 12,
   },
-  btnCancelText: { color: '#475569', fontWeight: '700', fontSize: 15 },
+  btnCancelText: { color: '#475569', fontWeight: 'bold', fontSize: 16 },
   btnSubmit: {
     flex: 1,
     backgroundColor: '#3B82F6',
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 8,
     alignItems: 'center',
   },
-  btnSubmitText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+  btnSubmitText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
 });
