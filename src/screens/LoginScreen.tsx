@@ -52,7 +52,7 @@ export default function LoginScreen({ navigation, onLoginSuccess }: Props) {
         if (user.pinHash === hashedInput) {
           await saveUserSession(user.id);
           await AsyncStorage.setItem('isLoggedIn', 'true');
-          await AsyncStorage.setItem('userRole', user.role);
+          await AsyncStorage.setItem('user_role', user.role);
           onLoginSuccess();
         } else {
           Alert.alert('Gagal', 'PIN salah!');
@@ -126,11 +126,11 @@ export default function LoginScreen({ navigation, onLoginSuccess }: Props) {
             )}
           </TouchableOpacity>
 
+          {/* FOOTER BARU: Menggantikan Register dengan teks Copyright */}
           <View style={styles.footerRow}>
-            <Text style={styles.footerText}>Belum punya akun? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={styles.registerLink}>Daftar di sini</Text>
-            </TouchableOpacity>
+            <Text style={styles.footerText}>
+              &copy; 2026 Kasir Pintar. All Rights Reserved.
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -199,7 +199,6 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { backgroundColor: '#94A3B8' },
   buttonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
-  footerRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 24 },
-  footerText: { color: '#64748B', fontSize: 14 },
-  registerLink: { color: '#2563EB', fontSize: 14, fontWeight: '700' },
+  footerRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 28 },
+  footerText: { color: '#94A3B8', fontSize: 12, fontWeight: '500' },
 });

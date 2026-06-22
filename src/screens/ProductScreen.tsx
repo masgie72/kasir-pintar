@@ -14,8 +14,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { database } from '../database';
-import TrashIcon from './src/assets/icons/Trash.svg'; // Menyesuaikan path Anda
-import EditIcon from './src/assets/icons/Edit.svg'; // Impor ikon edit baru
+import TrashIcon from '../assets/icons/Trash.svg'; // BENAR
+import EditIcon from '../assets/icons/Edit.svg'; 
 
 export default function ProductScreen({ navigation }: any) {
   const [products, setProducts] = useState<any[]>([]);

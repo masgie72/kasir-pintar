@@ -47,7 +47,7 @@ const jalankanCetakStruk = async (itemsBelanja: any[], totalHarga: number) => {
   } catch {}
 };
 
-export default function HomeScreen({ navigation, onLogoutSuccess }: Props) {
+export default function KasirScreen({ navigation, onLogoutSuccess }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,10 +76,12 @@ export default function HomeScreen({ navigation, onLogoutSuccess }: Props) {
   const totalPrice = items.reduce((s, i) => s + i.price * i.quantity, 0);
   const totalItems = items.reduce((s, i) => s + i.quantity, 0);
 
+  // BAGIAN YANG DIPERBAIKI: Mengambil deviceId dan menyertakannya ke createOrder
   const handleCheckout = async () => {
     if (!items.length) return;
     try {
-      await createOrder('kasir_01', totalPrice, items);
+      const deviceId = (await AsyncStorage.getItem('device_id')) || 'UNKNOWN';
+      await createOrder('kasir_01', totalPrice, items, deviceId);
       await jalankanCetakStruk(items, totalPrice);
       clearCart();
       Alert.alert('Sukses', 'Transaksi berhasil');
@@ -231,6 +233,7 @@ export default function HomeScreen({ navigation, onLogoutSuccess }: Props) {
   );
 }
 
+// MELENGKAPI KODE STYLES YANG TERPOTONG
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
@@ -278,88 +281,73 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 12,
-    minHeight: 140,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 4 },
-      },
-      android: { elevation: 2 },
-    }),
-  },
-  cardTop: {
-    flexDirection: 'row',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    minHeight: 140,
   },
-  name: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1E293B',
-    marginRight: 8,
-  },
-  stock: { fontSize: 11, color: '#64748B', fontWeight: '600' },
+  cardTop: { marginBottom: 6 },
+  name: { fontSize: 14, fontWeight: '700', color: '#0F172A', lineHeight: 18 },
+  stock: { fontSize: 11, color: '#64748B', marginTop: 2, fontWeight: '600' },
   price: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
     color: '#3B82F6',
     marginBottom: 12,
   },
   add: {
     backgroundColor: '#3B82F6',
-    borderRadius: 10,
-    paddingVertical: 9,
+    borderRadius: 8,
+    paddingVertical: 8,
     alignItems: 'center',
   },
-  addT: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  addT: { color: '#fff', fontWeight: '700', fontSize: 13 },
   counter: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 10,
-    padding: 4,
     justifyContent: 'space-between',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 8,
+    overflow: 'hidden',
   },
   cBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#E2E8F0',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    justifyContent: 'center',
   },
-  cMinus: { fontSize: 20, color: '#EF4444', fontWeight: '700', marginTop: -2 },
+  cMinus: { fontSize: 16, fontWeight: 'bold', color: '#64748B' },
   cPlus: { backgroundColor: '#3B82F6' },
-  cPlusT: { fontSize: 18, color: '#fff', fontWeight: '700', marginTop: -1 },
-  cText: { fontSize: 15, fontWeight: '700', minWidth: 28, textAlign: 'center' },
+  cPlusT: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
+  cText: { fontSize: 14, fontWeight: '700', color: '#0F172A' },
   cartBar: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#0F172A',
+    bottom: 20,
+    left: 16,
+    right: 16,
+    backgroundColor: '#1E293B',
+    borderRadius: 16,
+    padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 16,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
   },
-  cartLabel: { color: '#94A3B8', fontSize: 12 },
-  cartTotal: { color: '#fff', fontSize: 20, fontWeight: '800', marginTop: 2 },
+  cartLabel: { color: '#94A3B8', fontSize: 12, fontWeight: '600' },
+  cartTotal: { color: '#FFF', fontSize: 18, fontWeight: '800', marginTop: 2 },
   payBtn: {
-    backgroundColor: '#10B981',
-    paddingHorizontal: 28,
-    paddingVertical: 14,
-    borderRadius: 14,
+    backgroundColor: '#3B82F6',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
   },
-  payText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+  payText: { color: '#FFF', fontWeight: '700', fontSize: 15 },
 });
