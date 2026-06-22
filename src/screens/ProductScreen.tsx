@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -15,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { database } from '../database';
+import TrashIcon from './src/assets/icons/Trash.svg'; // Sesuaikan relative path (../) dengan lokasi file ini
 
 export default function ProductScreen() {
   const [products, setProducts] = useState<any[]>([]);
@@ -199,7 +199,7 @@ export default function ProductScreen() {
                 style={styles.deleteButton}
                 onPress={() => handleDeleteProduct(item)}
               >
-                <Text style={styles.deleteButtonText}>🗑️</Text>
+                <TrashIcon width={24} height={24} fill="#FF0000" />
               </TouchableOpacity>
             </View>
           )}
@@ -427,4 +427,3 @@ const styles = StyleSheet.create({
   },
   btnSubmitText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
 });
-
