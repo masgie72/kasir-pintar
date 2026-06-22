@@ -49,7 +49,7 @@ export default function LoginScreen({ navigation, onLoginSuccess }: Props) {
 
       if (users.length > 0) {
         const user = users[0];
-        if (user.pin === hashedInput) {
+        if (user.pinHash === hashedInput) {
           await saveUserSession(user.id);
           await AsyncStorage.setItem('isLoggedIn', 'true');
           await AsyncStorage.setItem('userRole', user.role);

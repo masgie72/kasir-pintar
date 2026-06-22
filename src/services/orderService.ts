@@ -1,63 +1,59 @@
 import { database } from '../database';
 
-export const createOrder = async (userId: string, totalPrice: number, items: any[]) => {
+export const createOrder = async (
+  userId: string,
+  totalPrice: number,
+  items: any[],
+  deviceId: string
+) => {
   const db = database;
-  if (!db) {
-    throw new Error('Database tidak terinisialisasi!');
-  }
+  if (!db) throw new Error('Database tidak terinisialisasi!');
 
-  try {
-    await db.write(async () => {
-      const ordersCollection = db.get('orders');
-      const orderItemsCollection = db.get('order_items');
-      const productsCollection = db.get('products'); // 💡 1. Panggil koleksi produk
+  await db.write(async () => {
+    const orders = db.get('orders');
+    const orderItems = db.get('order_items');
+    const products = db.get('products');
 
-      // Siapkan pembuatan data induk Pesanan (Header)
-      const newOrder = ordersCollection.prepareCreate((order: any) => {
-        order.userId = userId;
-        order.totalPrice = totalPrice;
-        order.createdAt = new Date();
+    const newOrder = orders.prepareCreate((order: any) => {
+  order.userId = userId;
+  order.totalPrice = totalPrice;
+  order.status = 'paid';
+  order.deviceId = deviceId;
+  order.createdAt = new Date(); // <-- bukan Date.now()
+  order.updatedAt = new Date();
+  order.isSynced = false;
+  order.deletedAt = null;
+});
+
+    const batch: any[] = [newOrder];
+
+    for (const item of items) {
+      const newItem = orderItems.prepareCreate((oi: any) => {
+        oi.order.set(newOrder);
+        oi.productId = item.productId;
+        oi.name = item.name;
+        oi.price = Number(item.price);
+        oi.quantity = Number(item.quantity);
+        oi.deviceId = deviceId; // <-- baru
+        oi.updatedAt = Date.now();
+        oi.isSynced = false;
       });
+      batch.push(newItem);
 
-      // Siapkan array kosong untuk mengumpulkan tugas operasi batch SQLite
-      const batchRecords: any[] = [newOrder];
-
-      // Lakukan perulangan untuk setiap item di keranjang belanja
-      for (const item of items) {
-        // A. Siapkan pencatatan rincian barang belanjaan (Detail)
-        const newOrderItem = orderItemsCollection.prepareCreate((orderItem: any) => {
-          orderItem.order.set(newOrder);
-          orderItem.name = item.name;
-          orderItem.productId = item.productId;
-          orderItem.price = Number(item.price);
-          orderItem.quantity = Number(item.quantity);
-        });
-        batchRecords.push(newOrderItem);
-
-        // B. 💡 SOLUSI UTAMA: Cari produk asli di database berdasarkan ID untuk dikurangi stoknya
-        try {
-          const product = await productsCollection.find(item.productId);
-          
-          if (product) {
-            // Siapkan perintah pembaruan data stok produk secara aman
-            const updatedProduct = product.prepareUpdate((p: any) => {
-              // Kurangi nilai stok asli dengan jumlah kuantitas yang dibeli kasir
-              p.stock = Number(p.stock || 0) - Number(item.quantity);
-            });
-            batchRecords.push(updatedProduct);
-          }
-        } catch (findError) {
-          console.warn(`Produk dengan ID ${item.productId} tidak ditemukan di gudang, melewati pemotongan stok.`);
+      // potong stok lokal (tetap jalan, nanti server yang jadi sumber utama)
+      try {
+        const product = await products.find(item.productId);
+        if (product) {
+          const upd = product.prepareUpdate((p: any) => {
+            p.stock = Number(p.stock || 0) - Number(item.quantity);
+            p.updatedAt = Date.now();
+            p.isSynced = false;
+          });
+          batch.push(upd);
         }
-      }
+      } catch {}
+    }
 
-      // 💡 2. Eksekusi penulisan massal serentak (Simpan Transaksi + Potong Stok Sekaligus!)
-      await db.batch(batchRecords);
-    });
-    
-    console.log("Transaksi berhasil disimpan dan stok produk otomatis terpotong!");
-  } catch (error) {
-    console.error("Gagal melakukan checkout secara internal:", error);
-    throw error;
-  }
+    await db.batch(batch);
+  });
 };

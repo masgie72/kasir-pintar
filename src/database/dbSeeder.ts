@@ -1,7 +1,7 @@
 import { Q, Database } from '@nozbe/watermelondb';
 import { Collection } from '@nozbe/watermelondb';
 import PBKDF2 from 'crypto-js/pbkdf2';
-import User from './models/User'; // <-- penting
+import User from './models/User';
 
 const SUPERUSER_CONFIG = {
   name: 'Pemilik Toko (SuperUser)',
@@ -13,7 +13,6 @@ const SUPERUSER_CONFIG = {
 export const inisialisasiSuperUser = async (database: Database) => {
   if (!database) return;
 
-  // kasih generic <User> biar TS tahu tipenya
   const users: Collection<User> = database.get<User>('users');
 
   try {
@@ -33,11 +32,13 @@ export const inisialisasiSuperUser = async (database: Database) => {
 
     await database.write(async () => {
       await users.create(user => {
-        // sekarang user dikenali sebagai User, bukan Model
         user.name = SUPERUSER_CONFIG.name;
         user.email = SUPERUSER_CONFIG.email;
-        user.pin = hashedPin;
+        user.pinHash = hashedPin;
         user.role = 'superuser';
+        user.isActive = true;
+        user.updatedAt = new Date();
+        user.isSynced = false;
       });
     });
 

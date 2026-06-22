@@ -3,7 +3,6 @@ import { schemaMigrations, createTable, addColumns } from '@nozbe/watermelondb/S
 export default schemaMigrations({
   migrations: [
     {
-      // v2: pertama kali bikin orders
       toVersion: 2,
       steps: [
         createTable({
@@ -17,7 +16,6 @@ export default schemaMigrations({
       ],
     },
     {
-      // v3: tambah order_items dengan snapshot nama produk
       toVersion: 3,
       steps: [
         createTable({
@@ -33,7 +31,6 @@ export default schemaMigrations({
       ],
     },
     {
-      // v4: tambah products dan users
       toVersion: 4,
       steps: [
         createTable({
@@ -56,10 +53,8 @@ export default schemaMigrations({
       ],
     },
     {
-      // v5: versi bersih - siap sync + POS
       toVersion: 5,
       steps: [
-        // orders
         addColumns({
           table: 'orders',
           columns: [
@@ -70,7 +65,6 @@ export default schemaMigrations({
             { name: 'is_synced', type: 'boolean' },
           ],
         }),
-        // order_items
         addColumns({
           table: 'order_items',
           columns: [
@@ -78,7 +72,6 @@ export default schemaMigrations({
             { name: 'is_synced', type: 'boolean' },
           ],
         }),
-        // products
         addColumns({
           table: 'products',
           columns: [
@@ -88,7 +81,6 @@ export default schemaMigrations({
             { name: 'is_synced', type: 'boolean' },
           ],
         }),
-        // users
         addColumns({
           table: 'users',
           columns: [
@@ -98,9 +90,31 @@ export default schemaMigrations({
             { name: 'is_synced', type: 'boolean' },
           ],
         }),
-        // index untuk kolom lama yang belum ada index
-        { type: 'sql', sql: 'CREATE INDEX IF NOT EXISTS products_name ON products (name)' },
-        { type: 'sql', sql: 'CREATE INDEX IF NOT EXISTS users_role ON users (role)' },
+      ],
+    },
+    {
+      toVersion: 6,
+      steps: [
+        addColumns({
+          table: 'orders',
+          columns: [
+            { name: 'device_id', type: 'string', isIndexed: true },
+            { name: 'deleted_at', type: 'number' },
+          ],
+        }),
+        addColumns({
+          table: 'order_items',
+          columns: [
+            { name: 'device_id', type: 'string', isIndexed: true },
+          ],
+        }),
+        addColumns({
+          table: 'products',
+          columns: [
+            { name: 'device_id', type: 'string', isIndexed: true },
+            { name: 'deleted_at', type: 'number' },
+          ],
+        }),
       ],
     },
   ],

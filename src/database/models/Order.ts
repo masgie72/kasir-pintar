@@ -17,6 +17,11 @@ export default class Order extends Model {
   @field('total_price') totalPrice!: number;
   @field('status') status!: string;
   @field('payment_method') paymentMethod!: string;
+  
+  // BARU untuk multi-kasir
+  @field('device_id') deviceId!: string;
+  @field('deleted_at') deletedAt!: number | null;
+  
   @date('created_at') createdAt!: Date;
   @date('updated_at') updatedAt!: Date;
   @field('is_synced') isSynced!: boolean;
