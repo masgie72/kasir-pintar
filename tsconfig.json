@@ -2,7 +2,8 @@
   "extends": "@react-native/typescript-config",
   "compilerOptions": {
     "target": "esnext",
-    "module": "commonjs",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "lib": ["ESNext"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -10,8 +11,9 @@
     "skipLibCheck": true,
     "types": ["jest"],
     "strictPropertyInitialization": false,
-    
+    "esModuleInterop": true
+    // Hapus "baseUrl": "." di sini
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["**/node_modules", "**/Pods"]
+  "exclude": ["node_modules", "babel.config.js", "metro.config.js", "jest.config.js"]
 }

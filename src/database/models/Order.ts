@@ -32,16 +32,19 @@ export default class Order extends Model {
   @children('order_items') orderItems!: Relation<OrderItem>;
 }
 
-export const getActiveUserHistoryWithItems = async (activeUserId: string) => {
+export const getActiveUserHistoryWithItems = async (activeUserId: string, limit: number = 50) => {
+  // Batasi dengan limit agar aplikasi tidak memuat ribuan order sekaligus ke memori
   const orders = await database.get<Order>('orders').query(
     Q.where('user_id', activeUserId),
-    Q.sortBy('created_at', Q.desc)
+    Q.sortBy('created_at', Q.desc),
+    Q.take(limit) // <--- Tambahkan limit di sini
   ).fetch();
 
-  // Membaca item untuk setiap order
+  // Optimasi: Gunakan Promise.all dengan batas batching jika data sangat besar
   const fullHistory = await Promise.all(
     orders.map(async (order) => {
-      const items = await order.orderItems.fetch(); // Mengambil order_items terkait
+      // Mengambil data item langsung dari model Order (sudah benar)
+      const items = await order.orderItems.fetch();
       return {
         order,
         items,
