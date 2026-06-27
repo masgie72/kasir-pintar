@@ -16,7 +16,9 @@ export default class Product extends Model {
   @field('price') price!: number;
   @field('stock') stock!: number;
   @field('is_active') isActive!: boolean;
-  @field('device_id') deviceId!: string; // Penting untuk sinkronisasi multi-device
+  @field('device_id') deviceId!: string;
+  @field('cost_price') costPrice!: number;
+  @field('category_id') categoryId!: string; // Penting untuk sinkronisasi multi-device
   
   @date('updated_at') updatedAt!: Date;
   @field('is_synced') isSynced!: boolean;

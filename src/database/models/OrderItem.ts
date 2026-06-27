@@ -19,6 +19,7 @@ export default class OrderItem extends Model {
   @field('name') name!: string;
   @field('price') price!: number;
   @field('quantity') quantity!: number;
+  @field('cost_price') costPrice!: number;
   
   // Field sinkronisasi untuk menjaga integritas data dengan server
   @field('is_synced') isSynced!: boolean;

@@ -12,8 +12,8 @@ import {
 import { database } from '../database';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Order from '../database/models/Order';
-import RNBluetoothClassic from 'react-native-bluetooth-classic';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { printText } from '../utils/printer';
 
 export default function OrderDetailScreen({ route, navigation }: any) {
   const { orderId, total: initialTotal } = route.params ?? {
@@ -47,12 +47,11 @@ export default function OrderDetailScreen({ route, navigation }: any) {
         setItems(mappedItems);
         setTotal(order.totalPrice);
 
-        // 👑 AMBIL DATA USER/KASIR SECARA DINAMIS BERDASARKAN USER_ID NYATA
         const uId = order.userId || (order as any)._raw?.user_id;
         if (uId) {
           try {
             const userRecord = await database.get('users').find(uId) as any;
-            setKasirName(userRecord.name); 
+            setKasirName(userRecord.name);
           } catch {
             setKasirName('Kasir (ID: ' + uId.substring(0, 4).toUpperCase() + ')');
           }
@@ -62,6 +61,8 @@ export default function OrderDetailScreen({ route, navigation }: any) {
 
       } catch (error) {
         console.error('Gagal mengambil data:', error);
+        setItems([]);
+        setTotal(0);
       } finally {
         setLoading(false);
       }
@@ -78,63 +79,60 @@ export default function OrderDetailScreen({ route, navigation }: any) {
 
       if (!printerAddress) {
         Alert.alert(
-          'Printer Belum Disetting', 
-          'Silakan pilih dan simpan perangkat printer thermal Anda terlebih dahulu agar bisa mencetak struk.', 
+          'Printer Belum Disetting',
+          'Silakan pilih dan simpan perangkat printer thermal Anda terlebih dahulu agar bisa mencetak struk.',
           [
             { text: 'Batal', style: 'cancel' },
-            { 
-              text: 'Buka Pengaturan', 
-              onPress: () => navigation.navigate('PrinterSetting') 
-            }
-          ]
+            {
+              text: 'Buka Pengaturan',
+              onPress: () => navigation.navigate('PrinterSetting'),
+            },
+          ],
         );
         setIsPrinting(false);
         return;
       }
 
-      const connected = await RNBluetoothClassic.connectToDevice(printerAddress);
+      const ESC = '\u001b';
+      const initPrinter = `${ESC}@`;
+      const alignCenter = `${ESC}a\u0001`;
+      const alignLeft = `${ESC}a\u0000`;
 
-      if (connected) {
-        const ESC = '\u001b';
-        const initPrinter = `${ESC}@`;
-        const alignCenter = `${ESC}a\u0001`;
-        const alignLeft = `${ESC}a\u0000`;
+      let struk = '';
 
-        let struk = '';
+      struk += initPrinter;
+      struk += alignCenter;
+      struk += 'KASIR PINTAR TOKO\n';
+      struk += 'Detail Riwayat Transaksi\n';
+      struk += `ID: #${orderId?.slice(-6).toUpperCase()}\n`;
+      struk += `Kasir: ${kasirName}\n`;
+      struk += '--------------------------------\n';
 
-        struk += initPrinter;
-        struk += alignCenter;
-        struk += 'KASIR PINTAR TOKO\n';
-        struk += 'Detail Riwayat Transaksi\n';
-        struk += `ID: #${orderId?.slice(-6).toUpperCase()}\n`;
-        struk += `Kasir: ${kasirName}\n`; // Menyertakan nama kasir asli pada kertas struk fisik
-        struk += '--------------------------------\n'; 
+      struk += alignLeft;
+      items.forEach(item => {
+        struk += `${item.name.slice(0, 32)}\n`;
 
-        struk += alignLeft;
-        items.forEach(item => {
-          struk += `${item.name.slice(0, 32)}\n`;
+        const detailHarga = `${item.quantity} x Rp ${item.price.toLocaleString('id-ID')}`;
+        const subTotal = `Rp ${(item.quantity * item.price).toLocaleString('id-ID')}`;
+        const sisaSpasi = 32 - (detailHarga.length + subTotal.length);
+        const spasiPemisah = ' '.repeat(sisaSpasi > 0 ? sisaSpasi : 1);
 
-          const detailHarga = `${item.quantity} x Rp ${item.price.toLocaleString('id-ID')}`;
-          const subTotal = `Rp ${(item.quantity * item.price).toLocaleString('id-ID')}`;
-          const sisaSpasi = 32 - (detailHarga.length + subTotal.length);
-          const spasiPemisah = ' '.repeat(sisaSpasi > 0 ? sisaSpasi : 1);
+        struk += `${detailHarga}${spasiPemisah}${subTotal}\n`;
+      });
 
-          struk += `${detailHarga}${spasiPemisah}${subTotal}\n`;
-        });
+      struk += '--------------------------------\n';
 
-        struk += '--------------------------------\n';
+      const teksTotalLabel = 'TOTAL AKHIR:';
+      const teksTotalHarga = `Rp ${total.toLocaleString('id-ID')}`;
+      const spasiTotal = 32 - (teksTotalLabel.length + teksTotalHarga.length);
+      struk += `${teksTotalLabel}${' '.repeat(spasiTotal > 0 ? spasiTotal : 1)}${teksTotalHarga}\n`;
 
-        const teksTotalLabel = 'TOTAL AKHIR:';
-        const teksTotalHarga = `Rp ${total.toLocaleString('id-ID')}`;
-        const spasiTotal = ' '.repeat(32 - (teksTotalLabel.length + teksTotalHarga.length));
-        struk += `${teksTotalLabel}${spasiTotal}${teksTotalHarga}\n`;
+      struk += '\n';
+      struk += alignCenter;
+      struk += 'Terima Kasih\nAtas Kepercayaan Anda \ud83d\ude0f\n\n\n\n';
 
-        struk += '\n';
-        struk += alignCenter;
-        struk += 'Terima Kasih\nAtas Kepercayaan Anda 🙏\n\n\n\n'; 
-
-        await RNBluetoothClassic.writeToDevice(printerAddress, struk);
-        await RNBluetoothClassic.disconnectFromDevice(printerAddress);
+      const success = await printText(printerAddress, struk);
+      if (success) {
         Alert.alert('Sukses 🎉', 'Nota belanja sedang dicetak.');
       } else {
         Alert.alert('Koneksi Gagal', 'Gagal menyambungkan ke printer. Pastikan mesin menyala.');

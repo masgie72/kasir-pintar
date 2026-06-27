@@ -36,6 +36,29 @@ export const getAllUsers = () => {
   return usersCollection.query();
 };
 
+export const updateUser = async (
+  user: User,
+  updatedData: { name?: string; email?: string; pin?: string }
+): Promise<void> => {
+  await database.write(async () => {
+    await user.update((u: any) => {
+      if (updatedData.name !== undefined) u.name = updatedData.name;
+      if (updatedData.email !== undefined) u.email = updatedData.email.toLowerCase().trim();
+      if (updatedData.pin !== undefined) {
+        u.pinHash = hashPinSecurity(updatedData.pin);
+      }
+      u.updatedAt = new Date();
+    });
+  });
+};
+
+export const deleteUser = async (user: User): Promise<void> => {
+  await database.write(async () => {
+    await user.markAsDeleted();
+  });
+};
+
+
 /// 1. UPDATE USER (Hanya diizinkan jika pelakunya adalah owner)
 export const updateUserWithAuth = async (
   currentUserRole: string, 

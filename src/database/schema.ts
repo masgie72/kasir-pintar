@@ -1,8 +1,19 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 6,
+  version: 9,
   tables: [
+    tableSchema({
+      name: 'categories',
+      columns: [
+        { name: 'name', type: 'string', isIndexed: true },
+        { name: 'description', type: 'string' },
+        { name: 'updated_at', type: 'number', isIndexed: true },
+        { name: 'is_synced', type: 'boolean' },
+        { name: 'deleted_at', type: 'number' },
+        { name: 'device_id', type: 'string', isIndexed: true },
+      ],
+    }),
     tableSchema({
       name: 'users',
       columns: [
@@ -30,6 +41,8 @@ export default appSchema({
         { name: 'is_synced', type: 'boolean' },
         { name: 'deleted_at', type: 'number' },
         { name: 'device_id', type: 'string', isIndexed: true },
+        { name: 'cost_price', type: 'number' },
+        { name: 'category_id', type: 'string', isIndexed: true },
       ],
     }),
     tableSchema({
@@ -48,6 +61,20 @@ export default appSchema({
       ],
     }),
     tableSchema({
+      name: 'customers',
+      columns: [
+        { name: 'name', type: 'string', isIndexed: true },
+        { name: 'phone', type: 'string', isIndexed: true },
+        { name: 'email', type: 'string', isIndexed: true },
+        { name: 'address', type: 'string' },
+        { name: 'is_active', type: 'boolean' },
+        { name: 'updated_at', type: 'number', isIndexed: true },
+        { name: 'is_synced', type: 'boolean' },
+        { name: 'deleted_at', type: 'number' },
+        { name: 'device_id', type: 'string', isIndexed: true },
+      ],
+    }),
+    tableSchema({
       name: 'order_items',
       columns: [
         { name: 'order_id', type: 'string', isIndexed: true },
@@ -59,6 +86,7 @@ export default appSchema({
         { name: 'is_synced', type: 'boolean' },
         { name: 'deleted_at', type: 'number' },
         { name: 'device_id', type: 'string', isIndexed: true },
+        { name: 'cost_price', type: 'number' },
       ],
     }),
   ],

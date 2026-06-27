@@ -117,5 +117,57 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 7,
+      steps: [
+        createTable({
+          name: 'customers',
+          columns: [
+            { name: 'name', type: 'string', isIndexed: true },
+            { name: 'phone', type: 'string', isIndexed: true },
+            { name: 'email', type: 'string', isIndexed: true },
+            { name: 'address', type: 'string' },
+            { name: 'is_active', type: 'boolean' },
+            { name: 'updated_at', type: 'number', isIndexed: true },
+            { name: 'is_synced', type: 'boolean' },
+            { name: 'deleted_at', type: 'number' },
+            { name: 'device_id', type: 'string', isIndexed: true },
+          ],
+        }),
+      ],
+    },
+    {
+      toVersion: 8,
+      steps: [
+        addColumns({
+          table: 'products',
+          columns: [{ name: 'cost_price', type: 'number' }],
+        }),
+        addColumns({
+          table: 'order_items',
+          columns: [{ name: 'cost_price', type: 'number' }],
+        }),
+      ],
+    },
+    {
+      toVersion: 9,
+      steps: [
+        createTable({
+          name: 'categories',
+          columns: [
+            { name: 'name', type: 'string', isIndexed: true },
+            { name: 'description', type: 'string' },
+            { name: 'updated_at', type: 'number', isIndexed: true },
+            { name: 'is_synced', type: 'boolean' },
+            { name: 'deleted_at', type: 'number' },
+            { name: 'device_id', type: 'string', isIndexed: true },
+          ],
+        }),
+        addColumns({
+          table: 'products',
+          columns: [{ name: 'category_id', type: 'string', isIndexed: true }],
+        }),
+      ],
+    },
   ],
 })

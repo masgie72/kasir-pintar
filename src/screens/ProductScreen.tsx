@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -11,21 +12,24 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { database } from '../database';
-import TrashIcon from '../assets/icons/Trash.svg'; // BENAR
+import TrashIcon from '../assets/icons/Trash.svg';
 import EditIcon from '../assets/icons/Edit.svg';
 
 export default function ProductScreen({ navigation }: any) {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // State untuk Modal Tambah Produk
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
+  const [costPrice, setCostPrice] = useState('');
   const [stock, setStock] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -49,14 +53,36 @@ export default function ProductScreen({ navigation }: any) {
     return () => subscription.unsubscribe();
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      let sub: any;
+      try {
+        sub = database.get('products').query().observe().subscribe({
+          next: (data) => setProducts(data),
+          error: () => {},
+        });
+      } catch (e) {
+        // ignore
+      }
+      return () => {
+        if (sub) sub.unsubscribe();
+      };
+    }, []),
+  );
+
   // Filter pencarian produk
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 800);
+  }, []);
+
   // Fungsi Menambah Produk Baru
   const handleAddProduct = async () => {
-    if (!name.trim() || !price.trim() || !stock.trim()) {
+    if (!name.trim() || !price.trim() || !stock.trim() || !costPrice.trim()) {
       Alert.alert('Gagal', 'Semua kolom wajib diisi!');
       return;
     }
@@ -69,14 +95,19 @@ export default function ProductScreen({ navigation }: any) {
         await productsCollection.create((newProduct: any) => {
           newProduct.name = name.trim();
           newProduct.price = Number(price);
+          newProduct.costPrice = Number(costPrice);
           newProduct.stock = Number(stock);
+          newProduct.isActive = true;
+          newProduct.deviceId = 'local';
+          newProduct.updatedAt = new Date();
+          newProduct.isSynced = false;
         });
       });
 
       Alert.alert('Sukses', 'Produk baru berhasil ditambahkan!');
-      // Reset Form & Tutup Modal
       setName('');
       setPrice('');
+      setCostPrice('');
       setStock('');
       setIsModalVisible(false);
     } catch (error) {
@@ -159,6 +190,7 @@ export default function ProductScreen({ navigation }: any) {
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3B82F6" />}
           ListEmptyComponent={
             <View style={styles.centerContainer}>
               <Text style={styles.emptyText}>
@@ -244,6 +276,16 @@ export default function ProductScreen({ navigation }: any) {
               keyboardType="numeric"
               value={price}
               onChangeText={setPrice}
+            />
+
+            <Text style={styles.inputLabel}>Harga Beli / Modal (Rp)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Contoh: 12000"
+              placeholderTextColor="#94A3B8"
+              keyboardType="numeric"
+              value={costPrice}
+              onChangeText={setCostPrice}
             />
 
             <Text style={styles.inputLabel}>Jumlah Stok Awal</Text>

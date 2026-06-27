@@ -11,5 +11,8 @@ export const getLoggedInUserId = async () => {
 
 export const logoutUser = async () => {
   await AsyncStorage.removeItem('user_session');
+};
 
+export const clearAutoLoginSession = async () => {
+  await AsyncStorage.removeItem('autologin_session');
 };

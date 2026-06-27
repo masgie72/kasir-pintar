@@ -65,7 +65,7 @@ export default function ManageUserScreen() {
         setEditingUser(null);
       } else {
         // Mode Tambah Baru
-        await createUser(name.trim(), email.trim().toLowerCase(), pin);
+        await createUser(name.trim(), email.trim().toLowerCase(), pin, 'kasir');
         Alert.alert('Sukses', 'Pengguna baru berhasil ditambahkan!');
       }
       resetForm();
@@ -78,7 +78,7 @@ export default function ManageUserScreen() {
     setEditingUser(user);
     setName(user.name);
     setEmail(user.email);
-    setPin(user.pin);
+    setPin('');
   };
 
   // Handler Hapus Data

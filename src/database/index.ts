@@ -7,21 +7,18 @@ import Order from './models/Order';
 import OrderItem from './models/OrderItem';
 import Product from './models/Product';
 import User from './models/User';
+import Customer from './models/Customer';
+import Category from './models/Category';
 
 const adapter = new SQLiteAdapter({
   schema,
   migrations,
-  dbName: 'kasir_pintar',
-  jsi: true,
-  onSetUpError: error => {
-    console.log('[DB] Setup Error:', error);
-    if (__DEV__) throw error;
-  },
+  dbName: 'toko_intan_db',
 });
 
 export const database = new Database({
   adapter,
-  modelClasses: [Order, OrderItem, Product, User],
+  modelClasses: [Order, OrderItem, Product, User, Customer, Category],
 });
 
 if (__DEV__) {

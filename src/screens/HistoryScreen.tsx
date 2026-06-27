@@ -1,21 +1,27 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
   FlatList,
   StyleSheet,
   TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { database } from '../database';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Q } from '@nozbe/watermelondb';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Order from '../database/models/Order';
 
 export default function HistoryScreen({ navigation }: any) {
   const [orders, setOrders] = useState<any[]>([]);
-  // State baru untuk menampung tipe filter waktu aktif
-  const [filterType, setFilterType] = useState<'hariIni' | '7hari' | 'semua'>(
-    'hariIni',
-  );
+  const [filterType, setFilterType] = useState<'hariIni' | '7hari' | 'semua'>('hariIni');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1000);
+  }, []);
 
   useEffect(() => {
     const ordersCollection = database.get('orders');
@@ -132,11 +138,12 @@ export default function HistoryScreen({ navigation }: any) {
 
       {/* FLATLIST DAFTAR STRUK BERDASARKAN HASIL FILTER */}
       <FlatList
-        data={filteredOrders} // 👑 Menggunakan filteredOrders dinamis dari Bagian 1
+        data={filteredOrders}
         keyExtractor={item => item.id}
         renderItem={renderOrderItem}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3B82F6" />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>

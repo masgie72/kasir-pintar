@@ -14,77 +14,47 @@ import {
 import { createUser } from '../../services/userService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function RegisterScreen({ navigation }: any) {
+export default function RegisterKasirScreen({ navigation }: any) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
-  const [role, setRole] = useState<'admin' | 'kasir'>('kasir');
-  const [adminToken, setAdminToken] = useState('');
-  const [activeToken, setActiveToken] = useState('DESWITA_INTAN_72');
   const [isLoading, setIsLoading] = useState(false);
-  const [currentUserRole, setCurrentUserRole] = useState<string>('kasir');
+  const [adminName, setAdminName] = useState('');
 
   useEffect(() => {
-    AsyncStorage.getItem('adminTokenSecret').then(t => { if (t) setActiveToken(t); });
-    AsyncStorage.getItem('user_role').then(r => { if (r) setCurrentUserRole(r); });
+    AsyncStorage.getItem('user_name').then(n => { if (n) setAdminName(n); });
   }, []);
 
   const handleRegister = async () => {
-    if (currentUserRole === 'admin') {
-      Alert.alert('Akses Ditolak ⚠️', 'Admin tidak dapat mengakses halaman ini.');
-      return;
-    }
     if (!name.trim() || !email.trim() || !pin || !confirmPin) {
       Alert.alert('Gagal', 'Semua kolom wajib diisi!');
       return;
     }
-
-    // 2. Validasi Format Email Sederhana
     const emailRegex = /\S+@\S+\.\S+/;
     if (!emailRegex.test(email)) {
       Alert.alert('Gagal', 'Format email tidak valid!');
       return;
     }
-
-    // 3. Validasi Panjang PIN
-    if (pin.length !== 6) {
+    if (pin.length !== 6 || confirmPin.length !== 6) {
       Alert.alert('Gagal', 'PIN harus terdiri dari 6 angka!');
       return;
     }
-
-    // 4. Validasi Konfirmasi PIN
     if (pin !== confirmPin) {
       Alert.alert('Gagal', 'Konfirmasi PIN tidak cocok!');
       return;
     }
 
-    // 5. Validasi Token Rahasia Khusus Admin
-    if (role === 'admin' && adminToken.trim() !== activeToken) {
-      Alert.alert(
-        'Akses Ditolak ❌',
-        'Kode Rahasia Admin salah! Anda tidak diizinkan membuat akun administrator.',
-      );
-      return;
-    }
-
     setIsLoading(true);
-
     try {
-      // Eksekusi penyimpanan data ke WatermelonDB via userService
-      await createUser(name.trim(), email.toLowerCase().trim(), pin, role);
-
-      // PERBAIKAN: Hapus navigation.navigate('Login') dari tombol OK
+      await createUser(name.trim(), email.toLowerCase().trim(), pin, 'kasir');
       Alert.alert(
         'Berhasil 🎉',
-        `Akun [${role.toUpperCase()}] berhasil didaftarkan!`,
+        `Akun Kasir [${email.trim()}] berhasil didaftarkan oleh ${adminName || 'Admin'}!`,
         [
           {
             text: 'OK',
-            onPress: () => {
-              // Cukup kembalikan layar admin ke halaman Dashboard sebelumnya
-              navigation.goBack();
-            },
+            onPress: () => navigation.goBack(),
           },
         ],
       );
@@ -105,27 +75,23 @@ export default function RegisterScreen({ navigation }: any) {
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header Visual */}
         <View style={styles.headerContainer}>
-          <Text style={styles.title}>Daftar Akun Baru</Text>
+          <Text style={styles.title}>Tambah Akun Kasir</Text>
           <Text style={styles.subtitle}>
-            Buat akun untuk mulai mengelola akses sistem kasir toko Anda.
+            Daftarkan akun kasir baru untuk operasional toko.
           </Text>
         </View>
 
-        {/* Form Input */}
         <View style={styles.formContainer}>
-          {/* Input Nama */}
           <Text style={styles.label}>Nama Lengkap</Text>
           <TextInput
             style={styles.input}
-            placeholder="Masukkan nama lengkap"
+            placeholder="Nama kasir"
             placeholderTextColor="#9CA3AF"
             value={name}
             onChangeText={setName}
           />
 
-          {/* Input Email */}
           <Text style={styles.label}>Alamat Email</Text>
           <TextInput
             style={styles.input}
@@ -137,65 +103,6 @@ export default function RegisterScreen({ navigation }: any) {
             onChangeText={setEmail}
           />
 
-          {/* Selektor Pilihan Role */}
-          <Text style={styles.label}>Tingkatan Hak Akses (Role)</Text>
-          <View style={styles.roleSelectorRow}>
-            <TouchableOpacity
-              style={[
-                styles.roleOptionCard,
-                role === 'kasir' && styles.roleOptionCardActive,
-              ]}
-              onPress={() => setRole('kasir')}
-            >
-              <Text
-                style={[
-                  styles.roleOptionTitle,
-                  role === 'kasir' && styles.textActive,
-                ]}
-              >
-                🛒 Kasir
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.roleOptionCard,
-                role === 'admin' && styles.roleOptionCardActive,
-              ]}
-              onPress={() => setRole('admin')}
-            >
-              <Text
-                style={[
-                  styles.roleOptionTitle,
-                  role === 'admin' && styles.textActive,
-                ]}
-              >
-                🛠️ Admin
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Input Kode Rahasia Admin */}
-          {role === 'admin' && (
-            <View>
-              <Text style={[styles.label, { color: '#EF4444' }]}>
-                Kode Rahasia Admin 店
-              </Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  { borderColor: '#FCA5A5', backgroundColor: '#FEF2F2' },
-                ]}
-                placeholder="Masukkan token otentikasi pemilik"
-                placeholderTextColor="#FCA3A3"
-                secureTextEntry
-                value={adminToken}
-                onChangeText={setAdminToken}
-              />
-            </View>
-          )}
-
-          {/* Input PIN */}
           <Text style={styles.label}>PIN Keamanan (6 Angka)</Text>
           <TextInput
             style={styles.input}
@@ -208,7 +115,6 @@ export default function RegisterScreen({ navigation }: any) {
             onChangeText={setPin}
           />
 
-          {/* Input Konfirmasi PIN */}
           <Text style={styles.label}>Konfirmasi PIN</Text>
           <TextInput
             style={styles.input}
@@ -221,7 +127,6 @@ export default function RegisterScreen({ navigation }: any) {
             onChangeText={setConfirmPin}
           />
 
-          {/* Tombol Register */}
           <TouchableOpacity
             style={[styles.button, isLoading && styles.buttonDisabled]}
             onPress={handleRegister}
@@ -230,7 +135,7 @@ export default function RegisterScreen({ navigation }: any) {
             {isLoading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.buttonText}>Daftar Sekarang</Text>
+              <Text style={styles.buttonText}>Daftar Kasir</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -294,41 +199,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
-  roleSelectorRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-    marginTop: 4,
-    marginBottom: 4,
-  },
-  roleOptionCard: {
-    flex: 1,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-  },
-  roleOptionCardActive: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#3B82F6',
-  },
-  roleOptionTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#4B5563',
-  },
-  textActive: {
-    color: '#3B82F6',
-  },
   button: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#10B981',
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 24,
-    shadowColor: '#3B82F6',
+    shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -340,20 +217,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
-  },
-  footerRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  footerText: {
-    color: '#6B7280',
-    fontSize: 14,
-  },
-  loginLink: {
-    color: '#3B82F6',
-    fontSize: 14,
     fontWeight: '700',
   },
 });

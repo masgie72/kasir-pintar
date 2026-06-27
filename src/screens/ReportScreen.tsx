@@ -1,6 +1,6 @@
 
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Platform } from 'react-native';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, Platform, RefreshControl } from 'react-native';
 import { database } from '../database';
 import { Q } from '@nozbe/watermelondb';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +10,12 @@ export default function ReportScreen() {
   const [totalOmzet, setTotalOmzet] = useState<number>(0);
   const [transactions, setTransactions] = useState<Order[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 800);
+  }, []);
 
   useEffect(() => {
     // 💡 Mengamati data secara real-time agar omzet otomatis bertambah saat ada transaksi baru
@@ -75,6 +81,7 @@ export default function ReportScreen() {
             data={transactions}
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3B82F6" />}
             contentContainerStyle={{ paddingBottom: 20 }}
             ListEmptyComponent={
               <View style={styles.emptyBox}>

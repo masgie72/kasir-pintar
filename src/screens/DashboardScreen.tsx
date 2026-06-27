@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -26,6 +27,7 @@ export default function DashboardScreen({
   const [userName, setUserName] = useState('Kasir');
   const [userRole, setUserRole] = useState('kasir');
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // State untuk data grafik penjualan (7 hari terakhir)
   const [salesData, setSalesData] = useState<{ day: string; total: number }[]>([
@@ -37,65 +39,116 @@ export default function DashboardScreen({
     { day: 'Sab', total: 0 },
     { day: 'Min', total: 0 },
   ]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [orderItems, setOrderItems] = useState<any[]>([]);
 
   useEffect(() => {
-    // 2. Ambil data nama dan role dari AsyncStorage secara dinamis
+    // Ambil data nama dan role dari AsyncStorage secara dinamis
     const getUserData = async () => {
       try {
         const savedName = await AsyncStorage.getItem('user_name');
         const savedRole = (await AsyncStorage.getItem('user_role')) || 'kasir';
 
-        if (savedName) setUserName(savedName); // Mengeset nama asli user
+        if (savedName) setUserName(savedName);
         setUserRole(savedRole);
       } catch (e) {
         console.error('Gagal mengambil data user:', e);
       }
     };
 
-    // 2. KALKULASI DINAMIS: Menghitung Omzet Asli 7 Hari Terakhir dari WatermelonDB
-    const subSales = database
-      .get('orders')
-      .query()
-      .observe()
-      .subscribe({
-        next: (orders: any[]) => {
-          // Buat wadah penghitung omzet per hari (0 = Minggu, 1 = Senin, dst)
-          const omzetPerHari = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
-
-          orders.forEach(order => {
-            // 1. Konversi timestamp number dari skema database ke objek tanggal
-            const tanggalOrder = new Date(
-              Number(order.createdAt || order.created_at),
-            );
-            const hariKe = tanggalOrder.getDay();
-            const harga = Number(order.totalPrice || order.total_price || 0);
-
-            // PERBAIKAN: Tambahkan 'as 0 | 1 | 2 | 3 | 4 | 5 | 6' agar TypeScript tidak komplain
-            const indeksHari = hariKe as 0 | 1 | 2 | 3 | 4 | 5 | 6;
-
-            // Akumulasikan total harga pesanan ke hari yang sesuai
-            omzetPerHari[indeksHari] += harga;
-          });
-
-          setSalesData([
-            { day: 'Sen', total: omzetPerHari[1] },
-            { day: 'Sel', total: omzetPerHari[2] },
-            { day: 'Rab', total: omzetPerHari[3] },
-            { day: 'Kam', total: omzetPerHari[4] },
-            { day: 'Jum', total: omzetPerHari[5] },
-            { day: 'Sab', total: omzetPerHari[6] },
-            { day: 'Min', total: omzetPerHari[0] },
-          ]);
-          setLoading(false);
-        },
-        error: () => setLoading(false),
-      });
-
     getUserData();
-    return () => subSales.unsubscribe();
+
+    let ordersSub: any;
+    let itemsSub: any;
+
+    const setupSubscriptions = async () => {
+      ordersSub = database
+        .get('orders')
+        .query()
+        .observe()
+        .subscribe({
+          next: (data: any[]) => setOrders(data),
+          error: () => setLoading(false),
+        });
+
+      itemsSub = database
+        .get('order_items')
+        .query()
+        .observe()
+        .subscribe({
+          next: (data: any[]) => setOrderItems(data),
+          error: () => setLoading(false),
+        });
+    };
+
+    setupSubscriptions();
+
+    return () => {
+      if (ordersSub) ordersSub.unsubscribe();
+      if (itemsSub) itemsSub.unsubscribe();
+    };
   }, []);
 
-  const maxSale = Math.max(...salesData.map(d => d.total), 1);
+  useEffect(() => {
+    if (orders.length > 0 || orderItems.length > 0 || !loading) {
+      setLoading(false);
+    }
+  }, [orders, orderItems]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const savedName = await AsyncStorage.getItem('user_name');
+      const savedRole = (await AsyncStorage.getItem('user_role')) || 'kasir';
+      if (savedName) setUserName(savedName);
+      setUserRole(savedRole);
+    } catch (e) {
+      console.error('Gagal refresh dashboard:', e);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
+  const formatRupiah = (value: number) => {
+    if (value >= 1000000) {
+      return 'Rp ' + (value / 1000000).toFixed(1).replace(/\.0$/, '') + 'Jt';
+    }
+    if (value >= 1000) {
+      return 'Rp ' + (value / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    }
+    return 'Rp ' + value;
+  };
+
+  const dailySales = useMemo(() => {
+    const omzetPerHari = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+    orders.forEach((order) => {
+      const tanggalOrder = new Date(Number(order.createdAt || order.created_at));
+      const hariKe = tanggalOrder.getDay();
+      const harga = Number(order.totalPrice || order.total_price || 0);
+      omzetPerHari[hariKe as keyof typeof omzetPerHari] += harga;
+    });
+    return [
+      { day: 'Sen', total: omzetPerHari[1] },
+      { day: 'Sel', total: omzetPerHari[2] },
+      { day: 'Rab', total: omzetPerHari[3] },
+      { day: 'Kam', total: omzetPerHari[4] },
+      { day: 'Jum', total: omzetPerHari[5] },
+      { day: 'Sab', total: omzetPerHari[6] },
+      { day: 'Min', total: omzetPerHari[0] },
+    ];
+  }, [orders]);
+
+  useEffect(() => {
+    setSalesData(dailySales);
+  }, [dailySales]);
+
+  const totalRevenue = useMemo(() => orders.reduce((sum, o) => sum + Number(o.totalPrice || 0), 0), [orders]);
+  const totalOrders = orders.length;
+  const totalCost = useMemo(() => orderItems.reduce((sum, i) => sum + (Number(i.costPrice || 0) * Number(i.quantity || 0)), 0), [orderItems]);
+  const totalItemsSold = useMemo(() => orderItems.reduce((sum, i) => sum + Number(i.quantity || 0), 0), [orderItems]);
+  const profit = totalRevenue - totalCost;
+
+  const maxSale = Math.max(...salesData.map((d) => d.total), 1);
 
   const handleLogout = async () => {
     Alert.alert('Keluar', 'Apakah Anda yakin ingin keluar?', [
@@ -105,16 +158,13 @@ export default function DashboardScreen({
         style: 'destructive',
         onPress: async () => {
           try {
-            // 1. Bersihkan session data lokal
             await AsyncStorage.removeItem('isLoggedIn');
             await AsyncStorage.removeItem('user_role');
             await AsyncStorage.removeItem('user_name');
-
-            // 2. Langsung pemicu fungsi logout bawaan dari props
+            await AsyncStorage.removeItem('user_id');
             if (onLogoutSuccess) {
               onLogoutSuccess();
             } else {
-              // Cadangan darurat jika props terlepas, paksa balik ke login via state navigasi dasar
               navigation.reset({
                 index: 0,
                 routes: [{ name: 'Login' }],
@@ -147,6 +197,9 @@ export default function DashboardScreen({
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#3B82F6" />
+        }
       >
         {/* GRAFIK OMZET */}
         <View style={styles.chartCard}>
@@ -163,6 +216,11 @@ export default function DashboardScreen({
                 const barHeight = (item.total / maxSale) * 120;
                 return (
                   <View key={index} style={styles.barContainer}>
+                    <View style={styles.valueLabel}>
+                      <Text style={[styles.valueText, item.total === 0 && styles.valueTextZero]}>
+                        {formatRupiah(item.total)}
+                      </Text>
+                    </View>
                     <View style={styles.barBackground}>
                       <View style={[styles.barActive, { height: barHeight }]} />
                     </View>
@@ -174,6 +232,19 @@ export default function DashboardScreen({
           )}
         </View>
 
+        <View style={styles.summaryRow}>
+          <View style={[styles.summaryCard, { flex: 1, marginRight: 8 }]}>
+            <Text style={styles.summaryLabel}>Total Omzet</Text>
+            <Text style={[styles.summaryValue, { color: '#2563EB' }]}>{formatRupiah(totalRevenue)}</Text>
+            <Text style={styles.summaryMeta}>{totalOrders} transaksi</Text>
+          </View>
+          <View style={[styles.summaryCard, { flex: 1, marginLeft: 8 }]}>
+            <Text style={styles.summaryLabel}>Laba Bersih</Text>
+            <Text style={[styles.summaryValue, { color: profit >= 0 ? '#16A34A' : '#DC2626' }]}>{formatRupiah(profit)}</Text>
+            <Text style={styles.summaryMeta}>{totalItemsSold} item terjual</Text>
+          </View>
+        </View>
+
         {/* MENU CEPAT SEKUNDER BERDASARKAN HAK AKSES */}
         <View style={styles.menuGrid}>
           {(userRole === 'owner' || userRole === 'admin') && (
@@ -182,11 +253,13 @@ export default function DashboardScreen({
                 styles.menuCard,
                 { backgroundColor: '#EFF6FF', width: '100%' },
               ]}
-              onPress={() => navigation.navigate('Register')}
+              onPress={() => navigation.navigate(
+                userRole === 'owner' ? 'Register' : 'RegisterKasir'
+              )}
             >
               <Text style={styles.menuIcon}>👤</Text>
               <Text style={[styles.menuText, { color: '#2563EB' }]}>
-                Tambah Karyawan Baru
+                {userRole === 'owner' ? 'Tambah Karyawan' : 'Tambah Kasir'}
               </Text>
             </TouchableOpacity>
           )}
@@ -223,6 +296,26 @@ export default function DashboardScreen({
             <Text style={styles.menuIcon}>⚙️</Text>
             <Text style={[styles.menuText, { color: '#6B21A8' }]}>
               Pengaturan Kasir
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuCard, { backgroundColor: '#E0F2FE' }]}
+            onPress={() => navigation.navigate('Customer')}
+          >
+            <Text style={styles.menuIcon}>👥</Text>
+            <Text style={[styles.menuText, { color: '#0369A1' }]}>
+              Data Pelanggan
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuCard, { backgroundColor: '#FFF7ED' }]}
+            onPress={() => navigation.navigate('Category')}
+          >
+            <Text style={styles.menuIcon}>🗂️</Text>
+            <Text style={[styles.menuText, { color: '#C2410C' }]}>
+              Kategori Produk
             </Text>
           </TouchableOpacity>
         </View>
@@ -308,6 +401,20 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   barLabel: { fontSize: 11, color: '#64748B', marginTop: 8, fontWeight: '600' },
+  valueLabel: { marginBottom: 4, minHeight: 18, justifyContent: 'center', alignItems: 'center' },
+  valueText: { fontSize: 10, color: '#2563EB', fontWeight: '700' },
+  valueTextZero: { color: '#94A3B8' },
+  summaryRow: { flexDirection: 'row', marginBottom: 16 },
+  summaryCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  summaryLabel: { fontSize: 12, color: '#64748B', fontWeight: '600', marginBottom: 4 },
+  summaryValue: { fontSize: 16, fontWeight: '800', color: '#0F172A' },
+  summaryMeta: { fontSize: 11, color: '#94A3B8', marginTop: 4, fontWeight: '500' },
   menuGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

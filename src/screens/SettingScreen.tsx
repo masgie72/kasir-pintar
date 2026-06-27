@@ -68,12 +68,13 @@ export default function SettingScreen() {
   }, []);
 
     const handleOpenEdit = (user: User) => {
-    // KUNCI UTAMA: Hanya role 'owner' yang boleh masuk ke formulir edit
-    if (currentUserRole !== 'owner') {
-      Alert.alert(
-        'Akses Ditolak ⚠️',
-        'Hanya akun Pemilik Toko (Owner) yang memiliki otoritas untuk mengubah data user.',
-      );
+    // Owner bisa edit semua, Admin bisa edit yang bukan Owner, Kasir tidak bisa edit siapa pun
+    if (currentUserRole === 'kasir') {
+      Alert.alert('Akses Ditolak ⚠️', 'Hanya Owner/Admin yang memiliki akses edit.');
+      return;
+    }
+    if (currentUserRole === 'admin' && user.role === 'owner') {
+      Alert.alert('Akses Ditolak ⚠️', 'Admin tidak dapat mengubah data Owner/Superuser.');
       return;
     }
     setSelectedUser(user);
@@ -84,9 +85,13 @@ export default function SettingScreen() {
   };
 
 
- const handleUpdateUser = async () => {
-    if (currentUserRole !== 'owner') {
-      Alert.alert('Akses Ditolak ⚠️', 'Tindakan ilegal. Anda tidak memiliki hak akses pemilik.');
+  const handleUpdateUser = async () => {
+    if (currentUserRole === 'kasir') {
+      Alert.alert('Akses Ditolak ⚠️', 'Tindakan ilegal. Anda tidak memiliki hak akses.');
+      return;
+    }
+    if (currentUserRole === 'admin' && selectedUser?.role === 'owner') {
+      Alert.alert('Akses Ditolak ⚠️', 'Admin tidak dapat mengubah data Owner/Superuser.');
       return;
     }
     if (!selectedUser) return;
@@ -128,12 +133,11 @@ export default function SettingScreen() {
       Alert.alert('Tindakan Ilegal ❌', 'Akun Owner utama tidak dapat dihapus oleh siapa pun!');
       return;
     }
-    // KUNCI UTAMA: Hanya owner yang boleh menghapus karyawan
-    if (currentUserRole !== 'owner') {
-      Alert.alert('Akses Ditolak ⚠️', 'Hanya Pemilik Toko (Owner) yang boleh menghapus akun.');
+    if (currentUserRole === 'kasir') {
+      Alert.alert('Akses Ditolak ⚠️', 'Hanya Owner/Admin yang boleh menghapus akun.');
       return;
     }
-
+    // Admin dan Owner bisa menghapus user non-owner
     Alert.alert(
       'Hapus Akun',
       `Apakah Anda yakin ingin menghapus user "${user.name}"?`,
@@ -215,40 +219,35 @@ export default function SettingScreen() {
                 </View>
               </View>
 
-               {/* PROTEKSI UI: Tombol Edit & Hapus otomatis tersembunyi total jika bukan OWNER */}
-              {currentUserRole === 'owner' && (
-                <View style={styles.cardActions}>
-                  <TouchableOpacity style={styles.editButton} onPress={() => handleOpenEdit(item)}>
-                    <Text style={styles.editButtonText}>✏️ Edit</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteUser(item)}>
-                    <Text style={styles.deleteButtonText}>🗑️</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+               {/* PROTEKSI UI: Tombol Edit & Hapus */}
+               {(currentUserRole === 'owner' || (currentUserRole === 'admin' && item.role !== 'owner')) && (
+                 <View style={styles.cardActions}>
+                   <TouchableOpacity style={styles.editButton} onPress={() => handleOpenEdit(item)}>
+                     <Text style={styles.editButtonText}>✏️ Edit</Text>
+                   </TouchableOpacity>
+                   <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteUser(item)}>
+                     <Text style={styles.deleteButtonText}>🗑️</Text>
+                   </TouchableOpacity>
+                 </View>
+               )}
 
-              {/* Jika yang login adalah Kasir atau Admin biasa, beri tahu akses dikunci */}
-              {currentUserRole !== 'owner' && (
-                <View style={styles.cardActions}>
-                  <Text style={{ color: '#94A3B8', fontSize: 12, fontStyle: 'italic' }}>
-                    🔒 Akses Terkunci
-                  </Text>
-                </View>
-              )}
-              {/* Jika bukan pemilik toko, beri info penanda akses terkunci */}
-              {currentUserRole !== 'admin' && currentUserRole !== 'owner' && (
-                <View style={styles.cardActions}>
-                  <Text
-                    style={{
-                      color: '#94A3B8',
-                      fontSize: 12,
-                      fontStyle: 'italic',
-                    }}
-                  >
-                    🔒 Terkunci
-                  </Text>
-                </View>
-              )}
+               {/* Kasir: akses terkunci */}
+               {currentUserRole === 'kasir' && (
+                 <View style={styles.cardActions}>
+                   <Text style={{ color: '#94A3B8', fontSize: 12, fontStyle: 'italic' }}>
+                     🔒 Akses Terkunci
+                   </Text>
+                 </View>
+               )}
+
+               {/* Admin: akses terbatas (tidak bisa sentuh owner) */}
+               {currentUserRole === 'admin' && item.role === 'owner' && (
+                 <View style={styles.cardActions}>
+                   <Text style={{ color: '#94A3B8', fontSize: 12, fontStyle: 'italic' }}>
+                     🔒 Terkunci (Owner)
+                   </Text>
+                 </View>
+               )}
             </View>
           )}
         />
