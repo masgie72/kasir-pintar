@@ -38,13 +38,83 @@ const EditProductScreen = React.lazy(
 const RegisterScreen = React.lazy(
   () => import('./src/screens/admin/RegisterScreen'),
 );
+const RegisterKasirScreen = React.lazy(
+  () => import('./src/screens/admin/RegisterKasirScreen'),
+);
 const SettingScreen = React.lazy(() => import('./src/screens/SettingScreen'));
 const PrinterSettingScreen = React.lazy(
   () => import('./src/screens/PrinterSettingScreen'),
 );
+const CheckoutScreen = React.lazy(() => import('./src/screens/CheckoutScreen'));
+const CustomerScreen = React.lazy(() => import('./src/screens/CustomerScreen'));
+const CategoryScreen = React.lazy(() => import('./src/screens/CategoryScreen'));
 
 // TAB NAVIGATOR KHUSUS OWNER (Ada Dashboard & Stok)
 function OwnerTabNavigator({ route }: any) {
+  const { onLogoutSuccess } = route.params || {};
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        tabBarActiveTintColor: '#3B82F6',
+        tabBarInactiveTintColor: '#94A3B8',
+        tabBarStyle: { height: 60, paddingBottom: 8, paddingTop: 8 },
+        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
+      }}
+    >
+      <Tab.Screen
+        name="TabDashboard"
+        options={{
+          title: 'Dashboard',
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <Text style={{ color, fontSize: 20 }}>📊</Text>
+          ),
+        }}
+      >
+        {props => (
+          <DashboardScreen {...props} onLogoutSuccess={onLogoutSuccess} />
+        )}
+      </Tab.Screen>
+      <Tab.Screen
+        name="TabKasir"
+        options={{
+          title: 'Kasir',
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <Text style={{ color, fontSize: 20 }}>🏪</Text>
+          ),
+        }}
+      >
+        {props => <KasirScreen {...props} onLogoutSuccess={onLogoutSuccess} />}
+      </Tab.Screen>
+      <Tab.Screen
+        name="TabProduct"
+        component={ProductScreen}
+        options={{
+          title: 'Stok',
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <Text style={{ color, fontSize: 20 }}>📦</Text>
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="TabHistory"
+        component={HistoryScreen}
+        options={{
+          title: 'Riwayat',
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <Text style={{ color, fontSize: 20 }}>📋</Text>
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+// TAB NAVIGATOR KHUSUS ADMIN (Tidak ada akses Owner, Register khusus Kasir)
+function AdminTabNavigator({ route }: any) {
   const { onLogoutSuccess } = route.params || {};
   return (
     <Tab.Navigator
@@ -154,11 +224,12 @@ export default function App() {
   // Fungsi penyegar status login agar bisa di-trigger dari LoginScreen
   const checkLoginStatus = async () => {
     const status = await AsyncStorage.getItem('isLoggedIn');
-    const role = (await AsyncStorage.getItem('user_role')) || 'kasir'; // Mengambil role pendukung
+    const role = (await AsyncStorage.getItem('user_role')) || 'kasir';
 
     setUserRole(role);
     setIsLoggedIn(status === 'true');
-     return { isLoggedIn: status === 'true', role: role };
+
+    return { isLoggedIn: status === 'true', role: role };
   };
 
   useEffect(() => {
@@ -274,10 +345,9 @@ export default function App() {
                   )}
                 </Stack.Screen>
               ) : userRole === 'admin' ? (
-                // Menambahkan pengondisian rute jika yang masuk adalah Admin Toko
                 <Stack.Screen name="MainTabs" options={{ headerShown: false }}>
                   {props => (
-                    <OwnerTabNavigator // Admin menggunakan navigator yang sama dengan Owner agar bisa kelola stok
+                    <AdminTabNavigator
                       {...props}
                       route={{
                         ...props.route,
@@ -301,6 +371,11 @@ export default function App() {
               )}
 
               {/* BARIS PERBAIKAN: Menempatkan Register di sini agar Owner/Admin bisa menambah karyawan baru */}
+              <Stack.Screen
+                name="RegisterKasir"
+                component={RegisterKasirScreen}
+                options={{ title: 'Daftar Kasir Baru' }}
+              />
               <Stack.Screen
                 name="Register"
                 component={RegisterScreen}
@@ -332,6 +407,21 @@ export default function App() {
                 name="PrinterSetting"
                 component={PrinterSettingScreen}
                 options={{ title: 'Pengaturan Printer' }}
+              />
+              <Stack.Screen
+                name="Checkout"
+                component={CheckoutScreen}
+                options={{ title: 'Pembayaran' }}
+              />
+              <Stack.Screen
+                name="Customer"
+                component={CustomerScreen}
+                options={{ title: 'Pelanggan' }}
+              />
+              <Stack.Screen
+                name="Category"
+                component={CategoryScreen}
+                options={{ title: 'Kategori Produk' }}
               />
             </>
           ) : (

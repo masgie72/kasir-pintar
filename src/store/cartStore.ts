@@ -5,6 +5,7 @@ export interface CartItem {
   productId: string; // Selalu string (UUID/Stringified ID)
   name: string;
   price: number;
+  costPrice: number;
   quantity: number;
 }
 
