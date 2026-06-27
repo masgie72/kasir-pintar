@@ -13,9 +13,11 @@ import { database } from '../database';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Order from '../database/models/Order';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../theme/ThemeContext';
 import { printText } from '../utils/printer';
 
 export default function OrderDetailScreen({ route, navigation }: any) {
+  const { theme } = useTheme();
   const { orderId, total: initialTotal } = route.params ?? {
     orderId: null,
     total: 0,
@@ -145,37 +147,36 @@ export default function OrderDetailScreen({ route, navigation }: any) {
     }
   };
   return (
-    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['bottom']}>
       {/* HEADER UTAMA */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Detail Transaksi 📄</Text>
-        <Text style={styles.headerSubtitle}>
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>Detail Transaksi 📄</Text>
+        <Text style={[styles.headerSubtitle, { color: theme.textSecondary }]}>
           ID Pesanan: #{orderId?.slice(-6).toUpperCase() || 'N/A'}
         </Text>
       </View>
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3B82F6" />
-          <Text style={styles.loadingText}>Memuat lembar nota...</Text>
+          <ActivityIndicator size="large" color={theme.primary} />
+          <Text style={[styles.loadingText, { color: theme.textSecondary }]}>Memuat lembar nota...</Text>
         </View>
       ) : (
         <View style={styles.content}>
           {/* DIGITAL RECEIPT CARD */}
-          <View style={styles.receiptCard}>
+          <View style={[styles.receiptCard, { backgroundColor: theme.card, shadowColor: theme.text }]}>
             
-            {/* 👑 BARIS BARU: Menampilkan info kasir yang melayani di atas struk digital */}
-            <View style={styles.cashierInfoRow}>
-              <Text style={styles.cashierLabel}>Kasir / Melayani :</Text>
-              <Text style={styles.cashierValue}>{kasirName} 💼</Text>
+            <View style={[styles.cashierInfoRow, { backgroundColor: theme.borderLight }]}>
+              <Text style={[styles.cashierLabel, { color: theme.textSecondary }]}>Kasir / Melayani :</Text>
+              <Text style={[styles.cashierValue, { color: theme.text }]}>{kasirName} 💼</Text>
             </View>
 
             <View style={styles.tableHeaderRow}>
-              <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Item</Text>
+              <Text style={[styles.tableHeaderCell, { flex: 2, color: theme.textSecondary }]}>Item</Text>
               <Text
                 style={[
                   styles.tableHeaderCell,
-                  { textAlign: 'center', flex: 0.5 },
+                  { textAlign: 'center', flex: 0.5, color: theme.textSecondary },
                 ]}
               >
                 Qty
@@ -183,16 +184,16 @@ export default function OrderDetailScreen({ route, navigation }: any) {
               <Text
                 style={[
                   styles.tableHeaderCell,
-                  { textAlign: 'right', flex: 1.5 },
+                  { textAlign: 'right', flex: 1.5, color: theme.textSecondary },
                 ]}
               >
                 Harga
               </Text>
             </View>
 
-            <Text style={styles.dashedLine} numberOfLines={1}>
+            <Text style={[styles.dashedLine, { color: theme.border }]} numberOfLines={1}>
               - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-              - - - - - - - - - - - - - - -
+              - - - - - - - - - - - - - -
             </Text>
 
             <FlatList
@@ -202,24 +203,24 @@ export default function OrderDetailScreen({ route, navigation }: any) {
               renderItem={({ item }) => (
                 <View style={styles.itemRow}>
                   <View style={styles.itemInfoCol}>
-                    <Text style={styles.itemName}>{item.name}</Text>
+                    <Text style={[styles.itemName, { color: theme.text }]}>{item.name}</Text>
                   </View>
-                  <Text style={styles.itemQtyCol}>x{item.quantity}</Text>
-                  <Text style={styles.itemPriceCol}>
+                  <Text style={[styles.itemQtyCol, { color: theme.textSecondary }]}>x{item.quantity}</Text>
+                  <Text style={[styles.itemPriceCol, { color: theme.text }]}>
                     Rp {(item.price * item.quantity).toLocaleString('id-ID')}
                   </Text>
                 </View>
               )}
             />
 
-            <Text style={styles.dashedLine} numberOfLines={1}>
+            <Text style={[styles.dashedLine, { color: theme.border }]} numberOfLines={1}>
               - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
               - - - - - - - - - - - - - - -
             </Text>
 
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Total Belanja</Text>
-              <Text style={styles.totalValue}>
+              <Text style={[styles.totalLabel, { color: theme.textSecondary }]}>Total Belanja</Text>
+              <Text style={[styles.totalValue, { color: theme.primary }]}>
                 Rp {total.toLocaleString('id-ID')}
               </Text>
             </View>
@@ -228,10 +229,11 @@ export default function OrderDetailScreen({ route, navigation }: any) {
       )}
 
       {/* FOOTER FIX BUTTON */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
         <TouchableOpacity
           style={[
             styles.btnPrimary,
+            { backgroundColor: theme.primary, shadowColor: theme.primary },
             (items.length === 0 || isPrinting) && styles.btnDisabled,
           ]}
           onPress={handlePrint}
@@ -249,73 +251,62 @@ export default function OrderDetailScreen({ route, navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#F8FAFC' },
+  safeArea: { flex: 1 },
   header: {
     paddingHorizontal: 24,
     paddingVertical: 18,
-    backgroundColor: '#FFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
   },
-  headerTitle: { fontSize: 20, fontWeight: '800', color: '#0F172A' },
+  headerTitle: { fontSize: 20, fontWeight: '800' },
   headerSubtitle: {
     fontSize: 13,
-    color: '#64748B',
     marginTop: 4,
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: {
     marginTop: 12,
-    color: '#64748B',
     fontSize: 14,
     fontWeight: '500',
   },
   content: { flex: 1, padding: 20 },
   receiptCard: {
-    backgroundColor: '#FFF',
     borderRadius: 20,
     padding: 20,
     flex: 1,
-    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.04,
     shadowRadius: 12,
     elevation: 3,
   },
-  // Style Baru untuk Baris Info Kasir Pelayan Toko
   cashierInfoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
-    backgroundColor: '#F1F5F9',
     padding: 12,
     borderRadius: 10,
   },
-  cashierLabel: { fontSize: 13, color: '#64748B', fontWeight: '600' },
-  cashierValue: { fontSize: 13, color: '#0F172A', fontWeight: '800' },
+  cashierLabel: { fontSize: 13, fontWeight: '600' },
+  cashierValue: { fontSize: 13, fontWeight: '800' },
   tableHeaderRow: { flexDirection: 'row', paddingVertical: 4 },
   tableHeaderCell: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#64748B',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   dashedLine: {
-    color: '#CBD5E1',
     marginVertical: 12,
     opacity: 0.8,
     letterSpacing: 1,
   },
   itemRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
   itemInfoCol: { flex: 2 },
-  itemName: { fontSize: 15, fontWeight: '600', color: '#1E293B' },
+  itemName: { fontSize: 15, fontWeight: '600' },
   itemQtyCol: {
     flex: 0.5,
     fontSize: 14,
-    color: '#64748B',
     fontWeight: '500',
     textAlign: 'center',
   },
@@ -323,7 +314,6 @@ const styles = StyleSheet.create({
     flex: 1.5,
     fontSize: 15,
     fontWeight: '700',
-    color: '#0F172A',
     textAlign: 'right',
   },
   totalRow: {
@@ -333,25 +323,21 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     marginTop: 4,
   },
-  totalLabel: { fontSize: 16, fontWeight: '700', color: '#64748B' },
-  totalValue: { fontSize: 24, fontWeight: '800', color: '#2563EB' },
+  totalLabel: { fontSize: 16, fontWeight: '700' },
+  totalValue: { fontSize: 24, fontWeight: '800' },
   footer: {
     padding: 20,
-    backgroundColor: '#FFF',
     borderTopWidth: 1,
-    borderColor: '#E2E8F0',
   },
   btnPrimary: {
-    backgroundColor: '#3B82F6',
     paddingVertical: 15,
     borderRadius: 14,
     alignItems: 'center',
-    shadowColor: '#3B82F6',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 3,
   },
-  btnDisabled: { backgroundColor: '#94A3B8', elevation: 0, shadowOpacity: 0 },
+  btnDisabled: { elevation: 0, shadowOpacity: 0 },
   btnText: { color: '#FFF', fontWeight: '700', fontSize: 16 },
 });

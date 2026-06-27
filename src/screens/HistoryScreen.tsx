@@ -8,12 +8,14 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { database } from '../database';
-import { Q } from '@nozbe/watermelondb';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { database } from '../database';
+import { useTheme } from '../theme/ThemeContext';
+import { Q } from '@nozbe/watermelondb';
 import Order from '../database/models/Order';
 
 export default function HistoryScreen({ navigation }: any) {
+  const { theme } = useTheme();
   const [orders, setOrders] = useState<any[]>([]);
   const [filterType, setFilterType] = useState<'hariIni' | '7hari' | 'semua'>('hariIni');
   const [refreshing, setRefreshing] = useState(false);
@@ -68,27 +70,27 @@ export default function HistoryScreen({ navigation }: any) {
 
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={[styles.card, { backgroundColor: theme.card, shadowColor: theme.text }]}
         activeOpacity={0.7}
         onPress={() => navigation.navigate('OrderDetail', { orderId: item.id })}
       >
         <View style={styles.cardHeader}>
           <View>
-            <Text style={styles.trxId}>
+            <Text style={[styles.trxId, { color: theme.text }]}>
               TRX-{item.id.substring(0, 6).toUpperCase()}
             </Text>
-            <Text style={styles.trxDate}>{dateString}</Text>
+            <Text style={[styles.trxDate, { color: theme.textSecondary }]}>{dateString}</Text>
           </View>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>Selesai</Text>
+          <View style={[styles.badge, { backgroundColor: theme.successLight }]}>
+            <Text style={[styles.badgeText, { color: theme.success }]}>Selesai</Text>
           </View>
         </View>
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: theme.borderLight }]} />
 
         <View style={styles.cardFooter}>
-          <Text style={styles.detailText}>Lihat detail pesanan →</Text>
-          <Text style={styles.totalPrice}>
+          <Text style={[styles.detailText, { color: theme.primary }]}>Lihat detail pesanan →</Text>
+          <Text style={[styles.totalPrice, { color: theme.text }]}>
             Rp {hargaTotal.toLocaleString('id-ID')}
           </Text>
         </View>
@@ -96,34 +98,35 @@ export default function HistoryScreen({ navigation }: any) {
     );
   };
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
       {/* HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-          <Text style={styles.backButtonText}>← Kembali</Text>
+          <Text style={[styles.backButtonText, { color: theme.primary }]}>← Kembali</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Riwayat Transaksi</Text>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>Riwayat Transaksi</Text>
         <View style={{ width: 60 }} />
       </View>
 
-      {/* 👑 BARIS SEGMENTED FILTER BUTTONS */}
-      <View style={styles.filterRow}>
+      {/* FILTER BUTTONS */}
+      <View style={[styles.filterRow, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         {(['hariIni', '7hari', 'semua'] as const).map(type => (
           <TouchableOpacity
             key={type}
             style={[
               styles.filterBtn,
-              filterType === type && styles.filterBtnActive,
+              filterType === type && { backgroundColor: theme.primary },
+              { backgroundColor: theme.borderLight },
             ]}
             onPress={() => setFilterType(type)}
           >
             <Text
               style={[
                 styles.filterBtnText,
-                filterType === type && styles.filterBtnTextActive,
+                { color: theme.text },
               ]}
             >
               {type === 'hariIni'
@@ -136,17 +139,17 @@ export default function HistoryScreen({ navigation }: any) {
         ))}
       </View>
 
-      {/* FLATLIST DAFTAR STRUK BERDASARKAN HASIL FILTER */}
+      {/* FLATLIST */}
       <FlatList
         data={filteredOrders}
         keyExtractor={item => item.id}
         renderItem={renderOrderItem}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3B82F6" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
               Tidak ada riwayat transaksi pada rentang ini.
             </Text>
           </View>
@@ -159,7 +162,6 @@ export default function HistoryScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
   },
   header: {
     flexDirection: 'row',
@@ -167,65 +169,46 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
   },
   backButton: {
     paddingVertical: 4,
   },
   backButtonText: {
     fontSize: 14,
-    color: '#3B82F6',
     fontWeight: '600',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1E293B',
   },
-  // Style Baru untuk Penataan Baris Tombol Filter Waktu
   filterRow: {
     flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
     gap: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
   },
   filterBtn: {
     flex: 1,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  filterBtnActive: {
-    backgroundColor: '#3B82F6',
-    borderColor: '#3B82F6',
   },
   filterBtnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#64748B',
-  },
-  filterBtnTextActive: {
-    color: '#FFFFFF',
   },
   listContainer: {
     padding: 16,
     paddingBottom: 30,
   },
   card: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -239,27 +222,24 @@ const styles = StyleSheet.create({
   trxId: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: '#1E293B',
     marginBottom: 2,
   },
   trxDate: {
     fontSize: 12,
-    color: '#94A3B8',
   },
   badge: {
-    backgroundColor: '#DCFCE7',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
+    backgroundColor: '#DCFCE7',
   },
   badgeText: {
-    color: '#15803D',
     fontSize: 11,
     fontWeight: 'bold',
+    color: '#15803D',
   },
   divider: {
     height: 1,
-    backgroundColor: '#F1F5F9',
     marginVertical: 12,
   },
   cardFooter: {
@@ -269,13 +249,11 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 13,
-    color: '#3B82F6',
     fontWeight: '500',
   },
   totalPrice: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#1E293B',
   },
   emptyContainer: {
     alignItems: 'center',
@@ -283,7 +261,6 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   emptyText: {
-    color: '#64748B',
     fontSize: 14,
     fontWeight: '500',
   },

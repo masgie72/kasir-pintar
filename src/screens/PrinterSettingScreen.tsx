@@ -18,8 +18,10 @@ import {
   printText,
   disconnectAll,
 } from '../utils/printer';
+import { useTheme } from '../theme/ThemeContext';
 
-export default function PrinterSettingScreen() {
+export default function PrinterSettingScreen({ navigation }: any) {
+  const { theme } = useTheme();
   const [devices, setDevices] = useState<any[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [savedAddress, setSavedAddress] = useState<string | null>(null);
@@ -132,37 +134,50 @@ export default function PrinterSettingScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.headerCard}>
-        <Text style={styles.headerTitle}>Printer Thermal 🖨️</Text>
-        <Text style={styles.headerSub}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* CUSTOM APP BAR */}
+      <View style={[styles.appBar, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Text style={[styles.backBtnText, { color: theme.text }]}>←</Text>
+        </TouchableOpacity>
+        <View style={{ flex: 1, marginLeft: 8 }}>
+          <Text style={[styles.appBarTitle, { color: theme.text }]}>Pengaturan Printer 🖨️</Text>
+          <Text style={[styles.appBarSub, { color: theme.textSecondary }]}>
+            Kelola perangkat thermal
+          </Text>
+        </View>
+      </View>
+
+      <View style={[styles.headerCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>Printer Thermal 🖨️</Text>
+        <Text style={[styles.headerSub, { color: theme.textSecondary }]}>
           {savedAddress ? 'Printer aktif:' : 'Belum ada printer yang dipilih'}
         </Text>
         {savedAddress && (
-          <Text style={styles.savedAddr}>{savedAddress}</Text>
+          <Text style={[styles.savedAddr, { color: theme.primary }]}>{savedAddress}</Text>
         )}
         <View style={styles.headerActions}>
           {savedAddress && (
             <>
-              <TouchableOpacity style={styles.testBtn} onPress={handleTestSaved} disabled={!!testingId}>
-                <Text style={styles.testBtnText}>{testingId === savedAddress ? 'Menguji...' : 'Test Koneksi'}</Text>
+              <TouchableOpacity style={[styles.testBtn, { backgroundColor: theme.primaryLight }]} onPress={handleTestSaved} disabled={!!testingId}>
+                <Text style={[styles.testBtnText, { color: theme.primary }]}>{testingId === savedAddress ? 'Menguji...' : 'Test Koneksi'}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.disconnectBtn} onPress={disconnect}>
-                <Text style={styles.disconnectText}>Putuskan</Text>
+              <TouchableOpacity style={[styles.disconnectBtn, { backgroundColor: theme.dangerLight }]} onPress={disconnect}>
+                <Text style={[styles.disconnectText, { color: theme.danger }]}>Putuskan</Text>
               </TouchableOpacity>
             </>
           )}
-          <TouchableOpacity style={styles.bondedBtn} onPress={loadBonded}>
-            <Text style={styles.bondedBtnText}>Perangkat Terpasang</Text>
+          <TouchableOpacity style={[styles.bondedBtn, { backgroundColor: theme.borderLight }]} onPress={loadBonded}>
+            <Text style={[styles.bondedBtnText, { color: theme.textSecondary }]}>Perangkat Terpasang</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      <TouchableOpacity style={styles.scanBtn} onPress={scanDevices} disabled={isScanning}>
+      <TouchableOpacity style={[styles.scanBtn, { backgroundColor: theme.primary }]} onPress={scanDevices} disabled={isScanning}>
         {isScanning ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.scanBtnText}>Cari Perangkat Bluetooth</Text>
+          <Text style={[styles.scanBtnText, { color: '#fff' }]}>Cari Perangkat Bluetooth</Text>
         )}
       </TouchableOpacity>
 
@@ -171,28 +186,32 @@ export default function PrinterSettingScreen() {
         keyExtractor={item => item.address}
         contentContainerStyle={{ padding: 16 }}
         ListEmptyComponent={
-          <Text style={styles.empty}>Tekan tombol di atas untuk mencari printer thermal.</Text>
+          <Text style={[styles.empty, { color: theme.textSecondary }]}>Tekan tombol di atas untuk mencari printer thermal.</Text>
         }
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.deviceCard, savedAddress === item.address && styles.deviceActive]}
-            onPress={() => savePrinter(item)}
-          >
+            <TouchableOpacity
+              style={[
+                styles.deviceCard,
+                savedAddress === item.address && { borderColor: theme.primary },
+                { backgroundColor: theme.card, borderColor: theme.border },
+              ]}
+              onPress={() => savePrinter(item)}
+            >
             <View style={{ flex: 1 }}>
-              <Text style={styles.deviceName}>{item.name || 'Perangkat Tidak Dikenal'}</Text>
-              <Text style={styles.deviceAddr}>{item.address}</Text>
+              <Text style={[styles.deviceName, { color: theme.text }]}>{item.name || 'Perangkat Tidak Dikenal'}</Text>
+              <Text style={[styles.deviceAddr, { color: theme.textSecondary }]}>{item.address}</Text>
             </View>
             {savedAddress === item.address && (
-              <View style={styles.activeBadge}>
-                <Text style={styles.activeText}>Terhubung</Text>
+              <View style={[styles.activeBadge, { backgroundColor: theme.successLight }]}>
+                <Text style={[styles.activeText, { color: theme.success }]}>Terhubung</Text>
               </View>
             )}
             <TouchableOpacity
-              style={styles.testItemBtn}
+              style={[styles.testItemBtn, { backgroundColor: theme.primaryLight }]}
               onPress={() => handleTest(item.address)}
               disabled={testingId === item.address}
             >
-              <Text style={styles.testItemBtnText}>
+              <Text style={[styles.testItemBtnText, { color: theme.primary }]}>
                 {testingId === item.address ? 'Tes...' : 'Test'}
               </Text>
             </TouchableOpacity>
@@ -204,38 +223,48 @@ export default function PrinterSettingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
-  headerCard: {
-    backgroundColor: '#fff', margin: 16, padding: 20, borderRadius: 18,
-    borderWidth: 1, borderColor: '#E2E8F0',
+  container: { flex: 1 },
+  appBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
   },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#0F172A' },
-  headerSub: { fontSize: 13, color: '#64748B', marginTop: 4, fontWeight: '600' },
+  backBtn: { padding: 8, marginRight: 4 },
+  backBtnText: { fontSize: 22, fontWeight: '700' },
+  appBarTitle: { fontSize: 18, fontWeight: '800' },
+  appBarSub: { fontSize: 12, marginTop: 1 },
+  headerCard: {
+    margin: 16, padding: 20, borderRadius: 18,
+    borderWidth: 1,
+  },
+  headerTitle: { fontSize: 18, fontWeight: '800' },
+  headerSub: { fontSize: 13, marginTop: 4, fontWeight: '600' },
   savedAddr: {
-    fontSize: 12, color: '#2563EB', marginTop: 6, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontSize: 12, marginTop: 6, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   headerActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
-  testBtn: { backgroundColor: '#EFF6FF', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
-  testBtnText: { color: '#2563EB', fontWeight: '700', fontSize: 13 },
-  disconnectBtn: { backgroundColor: '#FEE2E2', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
-  disconnectText: { color: '#DC2626', fontWeight: '700', fontSize: 13 },
-  bondedBtn: { backgroundColor: '#F1F5F9', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
-  bondedBtnText: { color: '#475569', fontWeight: '700', fontSize: 13 },
+  testBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
+  testBtnText: { fontWeight: '700', fontSize: 13 },
+  disconnectBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
+  disconnectText: { fontWeight: '700', fontSize: 13 },
+  bondedBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
+  bondedBtnText: { fontWeight: '700', fontSize: 13 },
   scanBtn: {
-    marginHorizontal: 16, backgroundColor: '#2563EB', paddingVertical: 14, borderRadius: 14,
+    marginHorizontal: 16, paddingVertical: 14, borderRadius: 14,
     alignItems: 'center', marginBottom: 8,
   },
-  scanBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
-  empty: { textAlign: 'center', color: '#94A3B8', marginTop: 40, paddingHorizontal: 24 },
+  scanBtnText: { fontWeight: '700', fontSize: 15 },
+  empty: { textAlign: 'center', marginTop: 40, paddingHorizontal: 24 },
   deviceCard: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', padding: 16,
-    borderRadius: 14, marginBottom: 10, borderWidth: 1, borderColor: '#E2E8F0', gap: 10,
+    flexDirection: 'row', alignItems: 'center', padding: 16,
+    borderRadius: 14, marginBottom: 10, borderWidth: 1, gap: 10,
   },
-  deviceActive: { backgroundColor: '#EFF6FF', borderColor: '#3B82F6' },
-  deviceName: { fontSize: 15, fontWeight: '700', color: '#0F172A' },
-  deviceAddr: { fontSize: 12, color: '#64748B', marginTop: 2, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
-  activeBadge: { backgroundColor: '#DCFCE7', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  activeText: { color: '#15803D', fontWeight: '700', fontSize: 12 },
-  testItemBtn: { backgroundColor: '#EFF6FF', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  testItemBtnText: { color: '#2563EB', fontWeight: '700', fontSize: 12 },
+  deviceName: { fontSize: 15, fontWeight: '700' },
+  deviceAddr: { fontSize: 12, marginTop: 2, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
+  activeBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  activeText: { fontWeight: '700', fontSize: 12 },
+  testItemBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  testItemBtnText: { fontWeight: '700', fontSize: 12 },
 });

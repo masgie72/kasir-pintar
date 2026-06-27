@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { database } from '../database';
+import { useTheme } from '../theme/ThemeContext';
 import LogoutIcon from '../assets/icons/logout.svg';
 
 type Props = {
@@ -23,11 +24,19 @@ export default function DashboardScreen({
   navigation,
   onLogoutSuccess,
 }: Props) {
+  const { theme } = useTheme();
   // 1. Tambahkan state dinamis untuk nama dan role user
   const [userName, setUserName] = useState('Kasir');
   const [userRole, setUserRole] = useState('kasir');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [currentDate, setCurrentDate] = useState('');
+
+  useEffect(() => {
+    const date = new Date();
+    const options: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+    setCurrentDate(date.toLocaleDateString('id-ID', options));
+  }, []);
 
   // State untuk data grafik penjualan (7 hari terakhir)
   const [salesData, setSalesData] = useState<{ day: string; total: number }[]>([
@@ -179,35 +188,36 @@ export default function DashboardScreen({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top']}>
       {/* HEADER WITH DYNAMIC USERNAME */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <View style={styles.profileSection}>
           <View>
-            <Text style={styles.headerSubtitle}>Selamat Datang,</Text>
+            <Text style={[styles.headerSubtitle, { color: theme.textSecondary }]}>Selamat Datang,</Text>
             {/* 3. Menampilkan Nama User asli dari database hasil login */}
-            <Text style={styles.headerTitle}>{userName} 💼</Text>
+            <Text style={[styles.headerTitle, { color: theme.text }]}>{userName} 💼</Text>
+            <Text style={[styles.headerDate, { color: theme.textSecondary }]}>{currentDate}</Text>
           </View>
         </View>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutIcon}>
-          <LogoutIcon width={22} height={22} fill="#EF4444" />
+        <TouchableOpacity onPress={handleLogout} style={[styles.logoutIcon, { backgroundColor: theme.dangerLight }]}>
+          <LogoutIcon width={22} height={22} fill={theme.danger} />
         </TouchableOpacity>
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.scrollContainer}
+        contentContainerStyle={[styles.scrollContainer, { backgroundColor: theme.background }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#3B82F6" />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.primary} />
         }
       >
         {/* GRAFIK OMZET */}
-        <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>Grafik Omzet Mingguan</Text>
+        <View style={[styles.chartCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.chartTitle, { color: theme.text }]}>Grafik Omzet Mingguan</Text>
           {loading ? (
             <ActivityIndicator
               size="small"
-              color="#3B82F6"
+              color={theme.primary}
               style={{ marginVertical: 40 }}
             />
           ) : (
@@ -217,14 +227,14 @@ export default function DashboardScreen({
                 return (
                   <View key={index} style={styles.barContainer}>
                     <View style={styles.valueLabel}>
-                      <Text style={[styles.valueText, item.total === 0 && styles.valueTextZero]}>
+                      <Text style={[styles.valueText, { color: item.total === 0 ? theme.textSecondary : theme.primary }]}>
                         {formatRupiah(item.total)}
                       </Text>
                     </View>
-                    <View style={styles.barBackground}>
-                      <View style={[styles.barActive, { height: barHeight }]} />
+                      <View style={[styles.barBackground, { backgroundColor: theme.borderLight }]}>
+                        <View style={[styles.barActive, { height: barHeight, backgroundColor: theme.primary }]} />
                     </View>
-                    <Text style={styles.barLabel}>{item.day}</Text>
+                      <Text style={[styles.barLabel, { color: theme.textSecondary }]}>{item.day}</Text>
                   </View>
                 );
               })}
@@ -233,15 +243,15 @@ export default function DashboardScreen({
         </View>
 
         <View style={styles.summaryRow}>
-          <View style={[styles.summaryCard, { flex: 1, marginRight: 8 }]}>
-            <Text style={styles.summaryLabel}>Total Omzet</Text>
-            <Text style={[styles.summaryValue, { color: '#2563EB' }]}>{formatRupiah(totalRevenue)}</Text>
-            <Text style={styles.summaryMeta}>{totalOrders} transaksi</Text>
+          <View style={[styles.summaryCard, { flex: 1, marginRight: 8, backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.summaryLabel, { color: theme.textSecondary }]}>Total Omzet</Text>
+            <Text style={[styles.summaryValue, { color: theme.primary }]}>{formatRupiah(totalRevenue)}</Text>
+            <Text style={[styles.summaryMeta, { color: theme.textSecondary }]}>{totalOrders} transaksi</Text>
           </View>
-          <View style={[styles.summaryCard, { flex: 1, marginLeft: 8 }]}>
-            <Text style={styles.summaryLabel}>Laba Bersih</Text>
-            <Text style={[styles.summaryValue, { color: profit >= 0 ? '#16A34A' : '#DC2626' }]}>{formatRupiah(profit)}</Text>
-            <Text style={styles.summaryMeta}>{totalItemsSold} item terjual</Text>
+          <View style={[styles.summaryCard, { flex: 1, marginLeft: 8, backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.summaryLabel, { color: theme.textSecondary }]}>Laba Bersih</Text>
+            <Text style={[styles.summaryValue, { color: profit >= 0 ? theme.success : theme.danger }]}>{formatRupiah(profit)}</Text>
+            <Text style={[styles.summaryMeta, { color: theme.textSecondary }]}>{totalItemsSold} item terjual</Text>
           </View>
         </View>
 
@@ -251,14 +261,14 @@ export default function DashboardScreen({
             <TouchableOpacity
               style={[
                 styles.menuCard,
-                { backgroundColor: '#EFF6FF', width: '100%' },
+                { backgroundColor: theme.primaryLight, width: '100%', borderColor: theme.border },
               ]}
               onPress={() => navigation.navigate(
                 userRole === 'owner' ? 'Register' : 'RegisterKasir'
               )}
             >
               <Text style={styles.menuIcon}>👤</Text>
-              <Text style={[styles.menuText, { color: '#2563EB' }]}>
+              <Text style={[styles.menuText, { color: theme.primary }]}>
                 {userRole === 'owner' ? 'Tambah Karyawan' : 'Tambah Kasir'}
               </Text>
             </TouchableOpacity>
@@ -268,53 +278,53 @@ export default function DashboardScreen({
             <TouchableOpacity
               style={[
                 styles.menuCard,
-                { backgroundColor: '#ECFDF5', width: '100%' },
+                { backgroundColor: theme.successLight, width: '100%', borderColor: theme.border },
               ]}
               onPress={() => navigation.navigate('Report')}
             >
               <Text style={styles.menuIcon}>📊</Text>
-              <Text style={[styles.menuText, { color: '#047857' }]}>
+              <Text style={[styles.menuText, { color: theme.success }]}>
                 Laporan Omzet
               </Text>
             </TouchableOpacity>
           )}
 
           <TouchableOpacity
-            style={[styles.menuCard, { backgroundColor: '#FEF3C7' }]}
+            style={[styles.menuCard, { backgroundColor: theme.warningLight, borderColor: theme.border }]}
             onPress={() => navigation.navigate('PrinterSetting')}
           >
             <Text style={styles.menuIcon}>🖨</Text>
-            <Text style={[styles.menuText, { color: '#92400E' }]}>
+            <Text style={[styles.menuText, { color: theme.warning }]}>
               Printer Bluetooth
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.menuCard, { backgroundColor: '#F3E8FF' }]}
+            style={[styles.menuCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
             onPress={() => navigation.navigate('Setting')}
           >
             <Text style={styles.menuIcon}>⚙️</Text>
-            <Text style={[styles.menuText, { color: '#6B21A8' }]}>
+            <Text style={[styles.menuText, { color: theme.textSecondary }]}>
               Pengaturan Kasir
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.menuCard, { backgroundColor: '#E0F2FE' }]}
+            style={[styles.menuCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
             onPress={() => navigation.navigate('Customer')}
           >
             <Text style={styles.menuIcon}>👥</Text>
-            <Text style={[styles.menuText, { color: '#0369A1' }]}>
+            <Text style={[styles.menuText, { color: theme.textSecondary }]}>
               Data Pelanggan
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.menuCard, { backgroundColor: '#FFF7ED' }]}
+            style={[styles.menuCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
             onPress={() => navigation.navigate('Category')}
           >
             <Text style={styles.menuIcon}>🗂️</Text>
-            <Text style={[styles.menuText, { color: '#C2410C' }]}>
+            <Text style={[styles.menuText, { color: theme.textSecondary }]}>
               Kategori Produk
             </Text>
           </TouchableOpacity>
@@ -325,39 +335,29 @@ export default function DashboardScreen({
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#F8FAFC' },
+  safeArea: { flex: 1 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
   },
   profileSection: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  avatarPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#F1F5F9',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  avatarText: { fontSize: 16 },
-  headerSubtitle: { fontSize: 12, color: '#64748B', fontWeight: '500' },
+  headerSubtitle: { fontSize: 12, fontWeight: '500' },
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0F172A',
     marginTop: 1,
+  },
+  headerDate: {
+    fontSize: 11,
+    fontWeight: '500',
+    marginTop: 2,
   },
   logoutIcon: {
     padding: 8,
-    backgroundColor: '#FEE2E2',
     borderRadius: 10,
     width: 40,
     height: 40,
@@ -366,17 +366,14 @@ const styles = StyleSheet.create({
   },
   scrollContainer: { padding: 16 },
   chartCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
   chartTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#1E293B',
     marginBottom: 20,
   },
   chartWrapper: {
@@ -390,31 +387,26 @@ const styles = StyleSheet.create({
   barBackground: {
     width: 14,
     height: 120,
-    backgroundColor: '#F1F5F9',
     borderRadius: 10,
     justifyContent: 'flex-end',
     overflow: 'hidden',
   },
   barActive: {
     width: '100%',
-    backgroundColor: '#3B82F6',
     borderRadius: 10,
   },
-  barLabel: { fontSize: 11, color: '#64748B', marginTop: 8, fontWeight: '600' },
+  barLabel: { fontSize: 11, marginTop: 8, fontWeight: '600' },
   valueLabel: { marginBottom: 4, minHeight: 18, justifyContent: 'center', alignItems: 'center' },
-  valueText: { fontSize: 10, color: '#2563EB', fontWeight: '700' },
-  valueTextZero: { color: '#94A3B8' },
+  valueText: { fontSize: 10, fontWeight: '700' },
   summaryRow: { flexDirection: 'row', marginBottom: 16 },
   summaryCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
-  summaryLabel: { fontSize: 12, color: '#64748B', fontWeight: '600', marginBottom: 4 },
-  summaryValue: { fontSize: 16, fontWeight: '800', color: '#0F172A' },
-  summaryMeta: { fontSize: 11, color: '#94A3B8', marginTop: 4, fontWeight: '500' },
+  summaryLabel: { fontSize: 12, fontWeight: '600', marginBottom: 4 },
+  summaryValue: { fontSize: 16, fontWeight: '800' },
+  summaryMeta: { fontSize: 11, marginTop: 4, fontWeight: '500' },
   menuGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -428,11 +420,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
   },
   menuIcon: { fontSize: 32, marginBottom: 6 },
   menuText: { fontSize: 14, fontWeight: '700', textAlign: 'center' },

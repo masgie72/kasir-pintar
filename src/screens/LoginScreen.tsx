@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Q } from '@nozbe/watermelondb';
 import PBKDF2 from 'crypto-js/pbkdf2';
 import { saveUserSession } from '../services/authService';
+import { useTheme } from '../theme/ThemeContext';
 import { database } from '../database';
 import User from '../database/models/User';
 
@@ -25,6 +26,7 @@ type Props = {
 };
 
 export default function LoginScreen({ navigation, onLoginSuccess }: Props) {
+  const { theme } = useTheme();
   const [pin, setPin] = useState('');
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -73,7 +75,7 @@ export default function LoginScreen({ navigation, onLoginSuccess }: Props) {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.background }]}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
@@ -85,18 +87,18 @@ export default function LoginScreen({ navigation, onLoginSuccess }: Props) {
             style={styles.logoImage}
             resizeMode="contain"
           />
-          <Text style={styles.title}>Kasir Pintar</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: theme.text }]}>Kasir Pintar</Text>
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
             Mempermudah pengelolaan transaksi bisnis Anda
           </Text>
         </View>
 
-        <View style={styles.formContainer}>
-          <Text style={styles.label}>Alamat Email</Text>
+        <View style={[styles.formContainer, { backgroundColor: theme.card, shadowColor: theme.text }]}>
+          <Text style={[styles.label, { color: theme.textSecondary }]}>Alamat Email</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]}
             placeholder="contoh@toko.com"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={theme.textSecondary}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -104,11 +106,11 @@ export default function LoginScreen({ navigation, onLoginSuccess }: Props) {
             returnKeyType="next"
           />
 
-          <Text style={styles.label}>PIN Keamanan (6 Digit)</Text>
+          <Text style={[styles.label, { color: theme.textSecondary }]}>PIN Keamanan (6 Digit)</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]}
             placeholder="******"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={theme.textSecondary}
             value={pin}
             onChangeText={setPin}
             maxLength={12}
@@ -130,7 +132,7 @@ export default function LoginScreen({ navigation, onLoginSuccess }: Props) {
 
           {/* FOOTER BARU: Menggantikan Register dengan teks Copyright */}
           <View style={styles.footerRow}>
-            <Text style={styles.footerText}>
+            <Text style={[styles.footerText, { color: theme.textSecondary }]}>
               &copy; 2026 Kasir Pintar. All Rights Reserved.
             </Text>
           </View>
@@ -141,30 +143,26 @@ export default function LoginScreen({ navigation, onLoginSuccess }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  container: { flex: 1 },
   scrollContainer: { flexGrow: 1, justifyContent: 'center', padding: 24 },
   headerContainer: { marginBottom: 28, alignItems: 'center' },
   logoImage: { width: 90, height: 90, marginBottom: 16 },
   title: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#0F172A',
     marginBottom: 6,
     textAlign: 'center',
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 14,
-    color: '#64748B',
     textAlign: 'center',
     lineHeight: 20,
     paddingHorizontal: 20,
   },
   formContainer: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 24,
-    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.04,
     shadowRadius: 12,
@@ -173,34 +171,28 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#475569',
     marginBottom: 6,
     marginTop: 12,
   },
   input: {
-    backgroundColor: '#F8FAFC',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 15,
-    color: '#0F172A',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
   button: {
-    backgroundColor: '#2563EB',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 28,
-    shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 2,
   },
-  buttonDisabled: { backgroundColor: '#94A3B8' },
+  buttonDisabled: { opacity: 0.6 },
   buttonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
   footerRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 28 },
-  footerText: { color: '#94A3B8', fontSize: 12, fontWeight: '500' },
+  footerText: { fontSize: 12, fontWeight: '500' },
 });

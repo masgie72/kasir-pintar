@@ -13,8 +13,10 @@ import {
 } from 'react-native';
 import { createUser } from '../../services/userService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../../theme/ThemeContext';
 
 export default function RegisterKasirScreen({ navigation }: any) {
+  const { theme } = useTheme();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [pin, setPin] = useState('');
@@ -67,47 +69,61 @@ export default function RegisterKasirScreen({ navigation }: any) {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* CUSTOM HEADER */}
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Text style={[styles.backBtnText, { color: theme.text }]}>←</Text>
+        </TouchableOpacity>
+        <View style={{ flex: 1, marginLeft: 8 }}>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Daftar Kasir Baru 🏪</Text>
+          <Text style={[styles.headerSubtitle, { color: theme.textSecondary }]}>
+            Buat akun kasir untuk operasional
+          </Text>
+        </View>
+      </View>
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.headerContainer}>
-          <Text style={styles.title}>Tambah Akun Kasir</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: theme.text }]}>Tambah Akun Kasir</Text>
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
             Daftarkan akun kasir baru untuk operasional toko.
           </Text>
         </View>
 
-        <View style={styles.formContainer}>
-          <Text style={styles.label}>Nama Lengkap</Text>
+        <View style={[styles.formContainer, { backgroundColor: theme.card }]}>
+          <Text style={[styles.label, { color: theme.textSecondary }]}>Nama Lengkap</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]}
             placeholder="Nama kasir"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={theme.textSecondary}
             value={name}
             onChangeText={setName}
           />
 
-          <Text style={styles.label}>Alamat Email</Text>
+          <Text style={[styles.label, { color: theme.textSecondary }]}>Alamat Email</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]}
             placeholder="contoh@toko.com"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={theme.textSecondary}
             keyboardType="email-address"
             autoCapitalize="none"
             value={email}
             onChangeText={setEmail}
           />
 
-          <Text style={styles.label}>PIN Keamanan (6 Angka)</Text>
+          <Text style={[styles.label, { color: theme.textSecondary }]}>PIN Keamanan (6 Angka)</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]}
             placeholder="******"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={theme.textSecondary}
             keyboardType="numeric"
             secureTextEntry
             maxLength={6}
@@ -115,11 +131,11 @@ export default function RegisterKasirScreen({ navigation }: any) {
             onChangeText={setPin}
           />
 
-          <Text style={styles.label}>Konfirmasi PIN</Text>
+          <Text style={[styles.label, { color: theme.textSecondary }]}>Konfirmasi PIN</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]}
             placeholder="******"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={theme.textSecondary}
             keyboardType="numeric"
             secureTextEntry
             maxLength={6}
@@ -128,7 +144,7 @@ export default function RegisterKasirScreen({ navigation }: any) {
           />
 
           <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
+            style={[styles.button, isLoading && styles.buttonDisabled, { backgroundColor: theme.primary }]}
             onPress={handleRegister}
             disabled={isLoading}
           >
@@ -141,14 +157,25 @@ export default function RegisterKasirScreen({ navigation }: any) {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+  },
+  backBtn: { padding: 8, marginRight: 4 },
+  backBtnText: { fontSize: 22, fontWeight: '700' },
+  headerTitle: { fontSize: 18, fontWeight: '800' },
+  headerSubtitle: { fontSize: 12, marginTop: 1 },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -161,22 +188,18 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#1F2937',
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: '#6B7280',
     textAlign: 'center',
     lineHeight: 20,
     paddingHorizontal: 20,
   },
   formContainer: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 12,
@@ -185,34 +208,28 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#4B5563',
     marginBottom: 6,
     marginTop: 12,
   },
   input: {
-    backgroundColor: '#F3F4F6',
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 15,
-    color: '#1F2937',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   button: {
-    backgroundColor: '#10B981',
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 24,
-    shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 2,
   },
   buttonDisabled: {
-    backgroundColor: '#9CA3AF',
+    opacity: 0.6,
   },
   buttonText: {
     color: '#FFFFFF',

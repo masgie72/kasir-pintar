@@ -15,6 +15,7 @@ NetInfo.addEventListener(state => {
 });
 setInterval(syncData, 30000);
 
+import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { database } from './src/database';
 import { inisialisasiSuperUser } from './src/database/dbSeeder';
 
@@ -49,16 +50,16 @@ const CheckoutScreen = React.lazy(() => import('./src/screens/CheckoutScreen'));
 const CustomerScreen = React.lazy(() => import('./src/screens/CustomerScreen'));
 const CategoryScreen = React.lazy(() => import('./src/screens/CategoryScreen'));
 
-// TAB NAVIGATOR KHUSUS OWNER (Ada Dashboard & Stok)
 function OwnerTabNavigator({ route }: any) {
   const { onLogoutSuccess } = route.params || {};
+  const { theme } = useTheme();
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#3B82F6',
-        tabBarInactiveTintColor: '#94A3B8',
-        tabBarStyle: { height: 60, paddingBottom: 8, paddingTop: 8 },
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textSecondary,
+        tabBarStyle: { height: 60, paddingBottom: 8, paddingTop: 8, backgroundColor: theme.surface },
+        tabBarLabelStyle: { fontSize: 12, fontWeight: '600', color: theme.text },
       }}
     >
       <Tab.Screen
@@ -113,16 +114,16 @@ function OwnerTabNavigator({ route }: any) {
   );
 }
 
-// TAB NAVIGATOR KHUSUS ADMIN (Tidak ada akses Owner, Register khusus Kasir)
 function AdminTabNavigator({ route }: any) {
   const { onLogoutSuccess } = route.params || {};
+  const { theme } = useTheme();
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#3B82F6',
-        tabBarInactiveTintColor: '#94A3B8',
-        tabBarStyle: { height: 60, paddingBottom: 8, paddingTop: 8 },
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textSecondary,
+        tabBarStyle: { height: 60, paddingBottom: 8, paddingTop: 8, backgroundColor: theme.surface },
+        tabBarLabelStyle: { fontSize: 12, fontWeight: '600', color: theme.text },
       }}
     >
       <Tab.Screen
@@ -177,16 +178,16 @@ function AdminTabNavigator({ route }: any) {
   );
 }
 
-// TAB NAVIGATOR KHUSUS KASIR (Hanya Kasir & Riwayat, Tidak Ada Dashboard/Stok)
 function KasirTabNavigator({ route }: any) {
   const { onLogoutSuccess } = route.params || {};
+  const { theme } = useTheme();
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#3B82F6',
-        tabBarInactiveTintColor: '#94A3B8',
-        tabBarStyle: { height: 60, paddingBottom: 8, paddingTop: 8 },
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textSecondary,
+        tabBarStyle: { height: 60, paddingBottom: 8, paddingTop: 8, backgroundColor: theme.surface },
+        tabBarLabelStyle: { fontSize: 12, fontWeight: '600', color: theme.text },
       }}
     >
       <Tab.Screen
@@ -216,19 +217,16 @@ function KasirTabNavigator({ route }: any) {
   );
 }
 
-export default function App() {
+function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState('kasir'); // State baru untuk menampung role ('owner' / 'kasir')
+  const [userRole, setUserRole] = useState('kasir');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fungsi penyegar status login agar bisa di-trigger dari LoginScreen
   const checkLoginStatus = async () => {
     const status = await AsyncStorage.getItem('isLoggedIn');
     const role = (await AsyncStorage.getItem('user_role')) || 'kasir';
-
     setUserRole(role);
     setIsLoggedIn(status === 'true');
-
     return { isLoggedIn: status === 'true', role: role };
   };
 
@@ -241,11 +239,9 @@ export default function App() {
           await AsyncStorage.setItem('device_id', deviceId);
         }
         console.log('[DEVICE]', deviceId);
-
         console.log('[DB] Setup start');
         await inisialisasiSuperUser(database);
         console.log('[DB] SuperUser ready');
-
         await checkLoginStatus();
       } catch (e) {
         console.error('Gagal init:', e);
@@ -267,7 +263,6 @@ export default function App() {
           alignItems: 'center',
         }}
       >
-        {/* Kontainer Tengah: Animasi Lottie */}
         <View
           style={{ alignItems: 'center', transform: [{ translateY: -40 }] }}
         >
@@ -279,10 +274,10 @@ export default function App() {
           />
             <View style={{ alignItems: 'center', transform: [{ translateY: -40 }] }}>
           <LottieView
-            source={require('./src/assets/loading.json')} // 👑 DIUBAH KE LOADING.JSON
+            source={require('./src/assets/loading.json')}
             autoPlay
             loop
-            style={{ width: 240, height: 240 }} 
+            style={{ width: 240, height: 240 }}
           />
           <Text style={{ marginTop: 12, fontSize: 15, fontWeight: '600', color: '#64748B', letterSpacing: 0.5 }}>
             Memuat Sistem Kasir...
@@ -290,7 +285,6 @@ export default function App() {
         </View>
         </View>
 
-        {/* KONTAINER LOGO GAMBAR DI BAGIAN BAWAH LAYAR */}
         <View
           style={{ position: 'absolute', bottom: 40, alignItems: 'center' }}
         >
@@ -306,16 +300,25 @@ export default function App() {
           >
             Powered By
           </Text>
-          {/* Memanggil file gambar branding.png Anda */}
           <Image
             source={require('./src/assets/branding.png')}
-            style={{ width: 140, height: 45 }} // Sesuaikan lebar dan tinggi logo toko Anda di sini
-            resizeMode="contain" // Menjaga agar logo tidak gepeng/terdistorsi
+            style={{ width: 140, height: 45 }}
+            resizeMode="contain"
           />
         </View>
       </View>
     );
   }
+
+  return (
+    <ThemeProvider>
+      <NavigationContent isLoggedIn={isLoggedIn} userRole={userRole} onLogoutSuccess={checkLoginStatus} />
+    </ThemeProvider>
+  );
+}
+
+function NavigationContent({ isLoggedIn, userRole, onLogoutSuccess }: any) {
+  const { theme } = useTheme();
 
   return (
     <NavigationContainer>
@@ -324,14 +327,13 @@ export default function App() {
           <View
             style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
           >
-            <ActivityIndicator size="large" color="#3B82F6" />
+            <ActivityIndicator size="large" color={theme.primary} />
           </View>
         }
       >
         <Stack.Navigator>
           {isLoggedIn ? (
             <>
-              {/* PENGONDISIAN UTAMA BERDASARKAN USER ROLE (OWNER / ADMIN / KASIR) */}
               {userRole === 'owner' ? (
                 <Stack.Screen name="MainTabs" options={{ headerShown: false }}>
                   {props => (
@@ -339,7 +341,7 @@ export default function App() {
                       {...props}
                       route={{
                         ...props.route,
-                        params: { onLogoutSuccess: checkLoginStatus },
+                        params: { onLogoutSuccess },
                       }}
                     />
                   )}
@@ -351,7 +353,7 @@ export default function App() {
                       {...props}
                       route={{
                         ...props.route,
-                        params: { onLogoutSuccess: checkLoginStatus },
+                        params: { onLogoutSuccess },
                       }}
                     />
                   )}
@@ -363,26 +365,23 @@ export default function App() {
                       {...props}
                       route={{
                         ...props.route,
-                        params: { onLogoutSuccess: checkLoginStatus },
+                        params: { onLogoutSuccess },
                       }}
                     />
                   )}
                 </Stack.Screen>
               )}
 
-              {/* BARIS PERBAIKAN: Menempatkan Register di sini agar Owner/Admin bisa menambah karyawan baru */}
               <Stack.Screen
                 name="RegisterKasir"
                 component={RegisterKasirScreen}
-                options={{ title: 'Daftar Kasir Baru' }}
+                options={{ headerShown: false }}
               />
               <Stack.Screen
                 name="Register"
                 component={RegisterScreen}
-                options={{ title: 'Tambah Karyawan' }}
+                options={{ headerShown: false }}
               />
-
-              {/* Stack Screen pendukung lainnya */}
               <Stack.Screen
                 name="OrderDetail"
                 component={OrderDetailScreen}
@@ -391,7 +390,7 @@ export default function App() {
               <Stack.Screen
                 name="Report"
                 component={ReportScreen}
-                options={{ title: 'Laporan Omzet' }}
+                options={{ headerShown: false }}
               />
               <Stack.Screen
                 name="EditProduct"
@@ -401,12 +400,12 @@ export default function App() {
               <Stack.Screen
                 name="Setting"
                 component={SettingScreen}
-                options={{ title: 'Pengaturan Kasir' }}
+                options={{ headerShown: false }}
               />
               <Stack.Screen
                 name="PrinterSetting"
                 component={PrinterSettingScreen}
-                options={{ title: 'Pengaturan Printer' }}
+                options={{ headerShown: false }}
               />
               <Stack.Screen
                 name="Checkout"
@@ -416,22 +415,21 @@ export default function App() {
               <Stack.Screen
                 name="Customer"
                 component={CustomerScreen}
-                options={{ title: 'Pelanggan' }}
+                options={{ headerShown: false }}
               />
               <Stack.Screen
                 name="Category"
                 component={CategoryScreen}
-                options={{ title: 'Kategori Produk' }}
+                options={{ headerShown: false }}
               />
             </>
           ) : (
             <>
               <Stack.Screen name="Login" options={{ headerShown: false }}>
                 {props => (
-                  <LoginScreen {...props} onLoginSuccess={checkLoginStatus} />
+                  <LoginScreen {...props} onLoginSuccess={onLogoutSuccess} />
                 )}
               </Stack.Screen>
-              {/* Baris Register di sini sudah dihapus demi keamanan sistem login luar */}
             </>
           )}
         </Stack.Navigator>
@@ -439,3 +437,5 @@ export default function App() {
     </NavigationContainer>
   );
 }
+
+export default App;
