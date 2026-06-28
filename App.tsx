@@ -49,6 +49,7 @@ const PrinterSettingScreen = React.lazy(
 const CheckoutScreen = React.lazy(() => import('./src/screens/CheckoutScreen'));
 const CustomerScreen = React.lazy(() => import('./src/screens/CustomerScreen'));
 const CategoryScreen = React.lazy(() => import('./src/screens/CategoryScreen'));
+const AboutScreen = React.lazy(() => import('./src/screens/AboutScreen'));
 
 function OwnerTabNavigator({ route }: any) {
   const { onLogoutSuccess } = route.params || {};
@@ -99,22 +100,33 @@ function OwnerTabNavigator({ route }: any) {
           ),
         }}
       />
-      <Tab.Screen
-        name="TabHistory"
-        component={HistoryScreen}
-        options={{
-          title: 'Riwayat',
-          headerShown: false,
-          tabBarIcon: ({ color }) => (
-            <Text style={{ color, fontSize: 20 }}>📋</Text>
-          ),
-        }}
-      />
-    </Tab.Navigator>
-  );
-}
+<Tab.Screen
+            name="TabHistory"
+            component={HistoryScreen}
+            options={{
+              title: 'Riwayat',
+              headerShown: false,
+              tabBarIcon: ({ color }) => (
+                <Text style={{ color, fontSize: 20 }}>📋</Text>
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="TabAbout"
+            component={AboutScreen}
+            options={{
+              title: 'Tentang',
+              headerShown: false,
+              tabBarIcon: ({ color }) => (
+                <Text style={{ color, fontSize: 20 }}>ℹ️</Text>
+              ),
+            }}
+          />
+        </Tab.Navigator>
+      );
+    }
 
-function AdminTabNavigator({ route }: any) {
+    function AdminTabNavigator({ route }: any) {
   const { onLogoutSuccess } = route.params || {};
   const { theme } = useTheme();
   return (
@@ -163,22 +175,33 @@ function AdminTabNavigator({ route }: any) {
           ),
         }}
       />
-      <Tab.Screen
-        name="TabHistory"
-        component={HistoryScreen}
-        options={{
-          title: 'Riwayat',
-          headerShown: false,
-          tabBarIcon: ({ color }) => (
-            <Text style={{ color, fontSize: 20 }}>📋</Text>
-          ),
-        }}
-      />
-    </Tab.Navigator>
-  );
-}
+<Tab.Screen
+            name="TabHistory"
+            component={HistoryScreen}
+            options={{
+              title: 'Riwayat',
+              headerShown: false,
+              tabBarIcon: ({ color }) => (
+                <Text style={{ color, fontSize: 20 }}>📋</Text>
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="TabAbout"
+            component={AboutScreen}
+            options={{
+              title: 'Tentang',
+              headerShown: false,
+              tabBarIcon: ({ color }) => (
+                <Text style={{ color, fontSize: 20 }}>ℹ️</Text>
+              ),
+            }}
+          />
+        </Tab.Navigator>
+      );
+    }
 
-function KasirTabNavigator({ route }: any) {
+    function KasirTabNavigator({ route }: any) {
   const { onLogoutSuccess } = route.params || {};
   const { theme } = useTheme();
   return (
@@ -202,22 +225,33 @@ function KasirTabNavigator({ route }: any) {
       >
         {props => <KasirScreen {...props} onLogoutSuccess={onLogoutSuccess} />}
       </Tab.Screen>
-      <Tab.Screen
-        name="TabHistory"
-        component={HistoryScreen}
-        options={{
-          title: 'Riwayat',
-          headerShown: false,
-          tabBarIcon: ({ color }) => (
-            <Text style={{ color, fontSize: 20 }}>📋</Text>
-          ),
-        }}
-      />
-    </Tab.Navigator>
-  );
-}
+<Tab.Screen
+            name="TabHistory"
+            component={HistoryScreen}
+            options={{
+              title: 'Riwayat',
+              headerShown: false,
+              tabBarIcon: ({ color }) => (
+                <Text style={{ color, fontSize: 20 }}>📋</Text>
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="TabAbout"
+            component={AboutScreen}
+            options={{
+              title: 'Tentang',
+              headerShown: false,
+              tabBarIcon: ({ color }) => (
+                <Text style={{ color, fontSize: 20 }}>ℹ️</Text>
+              ),
+            }}
+          />
+        </Tab.Navigator>
+      );
+    }
 
-function App() {
+    function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState('kasir');
   const [isLoading, setIsLoading] = useState(true);

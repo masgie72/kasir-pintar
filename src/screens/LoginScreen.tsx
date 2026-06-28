@@ -119,14 +119,14 @@ export default function LoginScreen({ navigation, onLoginSuccess }: Props) {
           />
 
           <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
+            style={[styles.button, { backgroundColor: theme.primary }, isLoading && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={isLoading}
           >
             {isLoading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.buttonText}>Masuk Ke Aplikasi</Text>
+              <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>Masuk Ke Aplikasi</Text>
             )}
           </TouchableOpacity>
 
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  buttonText: { fontSize: 16, fontWeight: '700' },
   footerRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 28 },
   footerText: { fontSize: 12, fontWeight: '500' },
 });
