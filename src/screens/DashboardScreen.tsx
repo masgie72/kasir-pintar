@@ -261,7 +261,7 @@ export default function DashboardScreen({
             <TouchableOpacity
               style={[
                 styles.menuCard,
-                { backgroundColor: theme.primaryLight, width: '100%', borderColor: theme.border },
+                { backgroundColor: theme.card, width: '100%', borderColor: theme.border },
               ]}
               onPress={() => navigation.navigate(
                 userRole === 'owner' ? 'Register' : 'RegisterKasir'
@@ -278,7 +278,7 @@ export default function DashboardScreen({
             <TouchableOpacity
               style={[
                 styles.menuCard,
-                { backgroundColor: theme.primaryLight, width: '100%', borderColor: theme.border },
+                { backgroundColor: theme.card, width: '100%', borderColor: theme.border },
               ]}
               onPress={() => navigation.navigate('Report')}
             >
@@ -290,7 +290,7 @@ export default function DashboardScreen({
           )}
 
           <TouchableOpacity
-            style={[styles.menuCard, { backgroundColor: theme.primaryLight, borderColor: theme.border }]}
+            style={[styles.menuCard, { backgroundColor: theme.card, borderColor: theme.border }]}
             onPress={() => navigation.navigate('PrinterSetting')}
           >
             <Text style={styles.menuIcon}>🖨</Text>
@@ -300,7 +300,7 @@ export default function DashboardScreen({
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.menuCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
+            style={[styles.menuCard, { backgroundColor: theme.card, borderColor: theme.border }]}
             onPress={() => navigation.navigate('Setting')}
           >
             <Text style={styles.menuIcon}>⚙️</Text>
@@ -310,7 +310,7 @@ export default function DashboardScreen({
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.menuCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
+            style={[styles.menuCard, { backgroundColor: theme.card, borderColor: theme.border }]}
             onPress={() => navigation.navigate('Customer')}
           >
             <Text style={styles.menuIcon}>👥</Text>
@@ -320,7 +320,7 @@ export default function DashboardScreen({
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.menuCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
+            style={[styles.menuCard, { backgroundColor: theme.card, borderColor: theme.border }]}
             onPress={() => navigation.navigate('Category')}
           >
             <Text style={styles.menuIcon}>🗂️</Text>
