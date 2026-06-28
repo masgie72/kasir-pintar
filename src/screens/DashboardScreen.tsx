@@ -268,7 +268,7 @@ export default function DashboardScreen({
               )}
             >
               <Text style={styles.menuIcon}>👤</Text>
-              <Text style={[styles.menuText, { color: theme.primary }]}>
+              <Text style={[styles.menuText, { color: theme.text }]}>
                 {userRole === 'owner' ? 'Tambah Karyawan' : 'Tambah Kasir'}
               </Text>
             </TouchableOpacity>
@@ -283,7 +283,7 @@ export default function DashboardScreen({
               onPress={() => navigation.navigate('Report')}
             >
               <Text style={styles.menuIcon}>📊</Text>
-              <Text style={[styles.menuText, { color: theme.primary }]}>
+              <Text style={[styles.menuText, { color: theme.text }]}>
                 Laporan Omzet
               </Text>
             </TouchableOpacity>
@@ -294,7 +294,7 @@ export default function DashboardScreen({
             onPress={() => navigation.navigate('PrinterSetting')}
           >
             <Text style={styles.menuIcon}>🖨</Text>
-            <Text style={[styles.menuText, { color: theme.primary }]}>
+            <Text style={[styles.menuText, { color: theme.text }]}>
               Printer Bluetooth
             </Text>
           </TouchableOpacity>
@@ -304,7 +304,7 @@ export default function DashboardScreen({
             onPress={() => navigation.navigate('Setting')}
           >
             <Text style={styles.menuIcon}>⚙️</Text>
-            <Text style={[styles.menuText, { color: theme.textSecondary }]}>
+            <Text style={[styles.menuText, { color: theme.text }]}>
               Pengaturan Kasir
             </Text>
           </TouchableOpacity>
@@ -314,7 +314,7 @@ export default function DashboardScreen({
             onPress={() => navigation.navigate('Customer')}
           >
             <Text style={styles.menuIcon}>👥</Text>
-            <Text style={[styles.menuText, { color: theme.textSecondary }]}>
+            <Text style={[styles.menuText, { color: theme.text }]}>
               Data Pelanggan
             </Text>
           </TouchableOpacity>
@@ -324,7 +324,7 @@ export default function DashboardScreen({
             onPress={() => navigation.navigate('Category')}
           >
             <Text style={styles.menuIcon}>🗂️</Text>
-            <Text style={[styles.menuText, { color: theme.textSecondary }]}>
+            <Text style={[styles.menuText, { color: theme.text }]}>
               Kategori Produk
             </Text>
           </TouchableOpacity>
