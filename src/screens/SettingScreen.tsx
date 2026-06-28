@@ -26,7 +26,7 @@ type Props = {
   route?: any;
 };
 
-export default function SettingScreen({ navigation, route }: Props) {
+export default function SettingScreen({ navigation }: Props) {
   const { theme, themeMode, toggleTheme } = useTheme();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,11 +84,11 @@ export default function SettingScreen({ navigation, route }: Props) {
 
   const handleOpenEdit = (user: User) => {
     if (currentUserRole === 'kasir') {
-      Alert.alert('Akses Ditolak ⚠️', 'Hanya Owner/Admin yang memiliki akses edit.');
+      Alert.alert('Akses Ditolak', 'Hanya Owner/Admin yang memiliki akses edit.');
       return;
     }
     if (currentUserRole === 'admin' && user.role === 'owner') {
-      Alert.alert('Akses Ditolak ⚠️', 'Admin tidak dapat mengubah data Owner/Superuser.');
+      Alert.alert('Akses Ditolak', 'Admin tidak dapat mengubah data Owner/Superuser.');
       return;
     }
     setSelectedUser(user);
@@ -100,11 +100,11 @@ export default function SettingScreen({ navigation, route }: Props) {
 
   const handleUpdateUser = async () => {
     if (currentUserRole === 'kasir') {
-      Alert.alert('Akses Ditolak ⚠️', 'Tindakan ilegal. Anda tidak memiliki hak akses.');
+      Alert.alert('Akses Ditolak', 'Tindakan ilegal. Anda tidak memiliki hak akses.');
       return;
     }
     if (currentUserRole === 'admin' && selectedUser?.role === 'owner') {
-      Alert.alert('Akses Ditolak ⚠️', 'Admin tidak dapat mengubah data Owner/Superuser.');
+      Alert.alert('Akses Ditolak', 'Admin tidak dapat mengubah data Owner/Superuser.');
       return;
     }
     if (!selectedUser) return;
@@ -130,12 +130,12 @@ export default function SettingScreen({ navigation, route }: Props) {
       }
 
       await updateUser(selectedUser, updatedData);
-      Alert.alert('Sukses 🎉', 'Data user berhasil diperbarui!');
+      Alert.alert('Sukses', 'Data user berhasil diperbarui!');
       setIsModalVisible(false);
       setSelectedUser(null);
     } catch (error) {
       console.error(error);
-      Alert.alert('Error ❌', 'Gagal memperbarui data user.');
+      Alert.alert('Error', 'Gagal memperbarui data user.');
     } finally {
       setIsSaving(false);
     }
@@ -143,11 +143,11 @@ export default function SettingScreen({ navigation, route }: Props) {
 
   const handleDeleteUser = (user: User) => {
     if (user.role === 'owner') {
-      Alert.alert('Tindakan Ilegal ❌', 'Akun Owner utama tidak dapat dihapus oleh siapa pun!');
+      Alert.alert('Tindakan Ilegal', 'Akun Owner utama tidak dapat dihapus oleh siapa pun!');
       return;
     }
     if (currentUserRole === 'kasir') {
-      Alert.alert('Akses Ditolak ⚠️', 'Hanya Owner/Admin yang boleh menghapus akun.');
+      Alert.alert('Akses Ditolak', 'Hanya Owner/Admin yang boleh menghapus akun.');
       return;
     }
     Alert.alert(
@@ -161,7 +161,7 @@ export default function SettingScreen({ navigation, route }: Props) {
           onPress: async () => {
             try {
               await deleteUser(user);
-              Alert.alert('Sukses 🎉', 'Akun berhasil dihapus.');
+              Alert.alert('Sukses', 'Akun berhasil dihapus.');
               if (selectedUser?.id === user.id) {
                 setIsModalVisible(false);
               }
@@ -179,51 +179,66 @@ export default function SettingScreen({ navigation, route }: Props) {
       Alert.alert('Gagal', 'Kode rahasia baru tidak boleh kosong!');
       return;
     }
-try {
-       await AsyncStorage.setItem('adminTokenSecret', newAdminToken.trim());
-       setActiveToken(newAdminToken.trim());
-       Alert.alert(
-         'Sukses 🎉',
-         'Kode rahasia pendaftaran Admin berhasil diperbarui!',
-       );
-       setNewAdminToken('');
-     } catch (error) {
-       Alert.alert('Error', 'Gagal menyimpan kode rahasia baru.');
-     }
-   };
+    try {
+      await AsyncStorage.setItem('adminTokenSecret', newAdminToken.trim());
+      setActiveToken(newAdminToken.trim());
+      Alert.alert(
+        'Sukses',
+        'Kode rahasia pendaftaran Admin berhasil diperbarui!',
+      );
+      setNewAdminToken('');
+    } catch (error) {
+      Alert.alert('Error', 'Gagal menyimpan kode rahasia baru.');
+    }
+  };
 
   const handleSaveStore = async () => {
-     if (!storeData.name.trim() || !storeData.address.trim() || !storeData.phone.trim()) {
-       Alert.alert('Gagal', 'Nama toko, alamat, dan nomor HP wajib diisi!');
-       return;
-     }
-     setIsStoreSaving(true);
-     try {
-       await createOrUpdateStore(storeData.name, storeData.address, storeData.phone);
-       Alert.alert('Sukses 🎉', 'Data toko berhasil disimpan!');
-     } catch (error) {
-       Alert.alert('Error', 'Gagal menyimpan data toko.');
-     } finally {
-       setIsStoreSaving(false);
-     }
-   };
+    if (!storeData.name.trim() || !storeData.address.trim() || !storeData.phone.trim()) {
+      Alert.alert('Gagal', 'Nama toko, alamat, dan nomor HP wajib diisi!');
+      return;
+    }
+    setIsStoreSaving(true);
+    try {
+      await createOrUpdateStore(storeData.name, storeData.address, storeData.phone);
+      Alert.alert('Sukses', 'Data toko berhasil disimpan!');
+    } catch (error) {
+      Alert.alert('Error', 'Gagal menyimpan data toko.');
+    } finally {
+      setIsStoreSaving(false);
+    }
+  };
 
-   return (
+  return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top']}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={[styles.backBtnText, { color: theme.text }]}>←</Text>
         </TouchableOpacity>
         <View style={{ flex: 1, marginLeft: 8 }}>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Pengaturan Kasir ⚙️</Text>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Pengaturan Kasir</Text>
           <Text style={[styles.headerSubtitle, { color: theme.textSecondary }]}>
-Kelola tema, user, dan preferensi aplikasi
+            Kelola tema, user, dan preferensi aplikasi
           </Text>
         </View>
       </View>
 
+      <View style={[styles.themeCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.themeTitle, { color: theme.text }]}>Tema Aplikasi</Text>
+          <Text style={[styles.themeSub, { color: theme.textSecondary }]}>
+            {themeMode === 'dark' ? 'Mode Gelap Aktif' : 'Mode Terang Aktif'}
+          </Text>
+        </View>
+        <Switch
+          value={themeMode === 'dark'}
+          onValueChange={toggleTheme}
+          trackColor={{ false: theme.textSecondary, true: theme.primary }}
+          thumbColor="#FFFFFF"
+        />
+      </View>
+
       <View style={[styles.storeCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text style={[styles.storeTitle, { color: theme.text }]}>Pengaturan Toko 🏪</Text>
+        <Text style={[styles.storeTitle, { color: theme.text }]}>Pengaturan Toko</Text>
         <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Nama Toko</Text>
         <TextInput
           style={[styles.input, { backgroundColor: theme.surface, color: theme.text, borderColor: theme.border }]}
@@ -274,7 +289,7 @@ Kelola tema, user, dan preferensi aplikasi
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={styles.centerContainer}>
-              <Text style={[styles.emptyText, { color: theme.textSecondary }]}>Belum ada user terdaftar 📋</Text>
+              <Text style={[styles.emptyText, { color: theme.textSecondary }]}>Belum ada user terdaftar</Text>
             </View>
           }
           renderItem={({ item }) => (
@@ -294,10 +309,10 @@ Kelola tema, user, dan preferensi aplikasi
               {(currentUserRole === 'owner' || (currentUserRole === 'admin' && item.role !== 'owner')) && (
                 <View style={styles.cardActions}>
                   <TouchableOpacity style={[styles.editButton, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => handleOpenEdit(item)}>
-                    <Text style={[styles.editButtonText, { color: theme.textSecondary }]}>✏️ Edit</Text>
+                    <Text style={[styles.editButtonText, { color: theme.textSecondary }]}>Edit</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={[styles.deleteButton, { backgroundColor: theme.dangerLight, borderColor: theme.border }]} onPress={() => handleDeleteUser(item)}>
-                    <Text style={styles.deleteButtonText}>🗑️</Text>
+                    <Text style={styles.deleteButtonText}>Hapus</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -305,7 +320,7 @@ Kelola tema, user, dan preferensi aplikasi
               {currentUserRole === 'kasir' && (
                 <View style={styles.cardActions}>
                   <Text style={[styles.lockedText, { color: theme.textSecondary }]}>
-                    🔒 Akses Terkunci
+                    Akses Terkunci
                   </Text>
                 </View>
               )}
@@ -313,7 +328,7 @@ Kelola tema, user, dan preferensi aplikasi
               {currentUserRole === 'admin' && item.role === 'owner' && (
                 <View style={styles.cardActions}>
                   <Text style={[styles.lockedText, { color: theme.textSecondary }]}>
-                    🔒 Terkunci (Owner)
+                    Terkunci (Owner)
                   </Text>
                 </View>
               )}
@@ -328,7 +343,7 @@ Kelola tema, user, dan preferensi aplikasi
           style={styles.modalOverlay}
         >
           <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>Ubah Profil Kasir 📝</Text>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Ubah Profil Kasir</Text>
 
             <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Nama Lengkap</Text>
             <TextInput
@@ -394,9 +409,9 @@ Kelola tema, user, dan preferensi aplikasi
 
       {(currentUserRole === 'owner' || currentUserRole === 'admin') && (
         <View style={[styles.superUserPanel, { backgroundColor: theme.warningLight, borderColor: theme.warning }]}>
-          <Text style={[styles.panelTitle, { color: theme.warning }]}>Pengaturan Pemilik (Owner) 🔒</Text>
+          <Text style={[styles.panelTitle, { color: theme.warning }]}>Pengaturan Pemilik (Owner)</Text>
           <Text style={[styles.panelSubtitle, { color: theme.textSecondary }]}>
-            Kode aktif saat ini:{' '}
+            Kode aktif saat ini: {' '}
             <Text style={{ fontWeight: '800', color: theme.text }}>{activeToken}</Text>
           </Text>
 
