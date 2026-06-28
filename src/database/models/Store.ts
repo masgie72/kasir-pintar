@@ -6,6 +6,7 @@ export default class Store extends Model {
 
   @field('name') name!: string;
   @field('address') address!: string;
+  @field('phone') phone!: string;
   @field('ppn_percentage') ppnPercentage!: number;
   @field('device_id') deviceId!: string;
 

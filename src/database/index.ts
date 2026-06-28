@@ -9,6 +9,7 @@ import Product from './models/Product';
 import User from './models/User';
 import Customer from './models/Customer';
 import Category from './models/Category';
+import Store from './models/Store';
 
 const adapter = new SQLiteAdapter({
   schema,
@@ -18,7 +19,7 @@ const adapter = new SQLiteAdapter({
 
 export const database = new Database({
   adapter,
-  modelClasses: [Order, OrderItem, Product, User, Customer, Category],
+  modelClasses: [Order, OrderItem, Product, User, Customer, Category, Store],
 });
 
 if (__DEV__) {

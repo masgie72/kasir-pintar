@@ -19,6 +19,7 @@ import { updateUser, deleteUser } from '../services/userService';
 import { useTheme } from '../theme/ThemeContext';
 import User from '../database/models/User';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createOrUpdateStore, getStore, getStoreData, StoreData } from '../services/storeService';
 
 type Props = {
   navigation?: any;
@@ -32,6 +33,8 @@ export default function SettingScreen({ navigation, route }: Props) {
   const [currentUserRole, setCurrentUserRole] = useState<string>('kasir');
   const [newAdminToken, setNewAdminToken] = useState('');
   const [activeToken, setActiveToken] = useState('TOKO_SUKSES_123');
+  const [storeData, setStoreData] = useState<StoreData>({ name: '', address: '', phone: '' });
+  const [isStoreSaving, setIsStoreSaving] = useState(false);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -47,6 +50,14 @@ export default function SettingScreen({ navigation, route }: Props) {
         setCurrentUserRole(role ?? 'kasir');
         const token = await AsyncStorage.getItem('adminTokenSecret');
         if (token) setActiveToken(token);
+
+        const store = await getStore();
+        if (store) {
+          setStoreData({ name: store.name, address: store.address, phone: store.phone });
+        } else {
+          const defaults = await getStoreData();
+          setStoreData(defaults);
+        }
       } catch (err) {
         console.error('Gagal memuat sesi setelan:', err);
       }
@@ -168,20 +179,36 @@ export default function SettingScreen({ navigation, route }: Props) {
       Alert.alert('Gagal', 'Kode rahasia baru tidak boleh kosong!');
       return;
     }
-    try {
-      await AsyncStorage.setItem('adminTokenSecret', newAdminToken.trim());
-      setActiveToken(newAdminToken.trim());
-      Alert.alert(
-        'Sukses 🎉',
-        'Kode rahasia pendaftaran Admin berhasil diperbarui!',
-      );
-      setNewAdminToken('');
-    } catch (error) {
-      Alert.alert('Error', 'Gagal menyimpan kode rahasia baru.');
-    }
-  };
+try {
+       await AsyncStorage.setItem('adminTokenSecret', newAdminToken.trim());
+       setActiveToken(newAdminToken.trim());
+       Alert.alert(
+         'Sukses 🎉',
+         'Kode rahasia pendaftaran Admin berhasil diperbarui!',
+       );
+       setNewAdminToken('');
+     } catch (error) {
+       Alert.alert('Error', 'Gagal menyimpan kode rahasia baru.');
+     }
+   };
 
-  return (
+  const handleSaveStore = async () => {
+     if (!storeData.name.trim() || !storeData.address.trim() || !storeData.phone.trim()) {
+       Alert.alert('Gagal', 'Nama toko, alamat, dan nomor HP wajib diisi!');
+       return;
+     }
+     setIsStoreSaving(true);
+     try {
+       await createOrUpdateStore(storeData.name, storeData.address, storeData.phone);
+       Alert.alert('Sukses 🎉', 'Data toko berhasil disimpan!');
+     } catch (error) {
+       Alert.alert('Error', 'Gagal menyimpan data toko.');
+     } finally {
+       setIsStoreSaving(false);
+     }
+   };
+
+   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top']}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -190,24 +217,49 @@ export default function SettingScreen({ navigation, route }: Props) {
         <View style={{ flex: 1, marginLeft: 8 }}>
           <Text style={[styles.headerTitle, { color: theme.text }]}>Pengaturan Kasir ⚙️</Text>
           <Text style={[styles.headerSubtitle, { color: theme.textSecondary }]}>
-            Kelola tema, user, dan preferensi aplikasi
+Kelola tema, user, dan preferensi aplikasi
           </Text>
         </View>
       </View>
 
-      <View style={[styles.themeCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.themeTitle, { color: theme.text }]}>Tema Aplikasi</Text>
-          <Text style={[styles.themeSub, { color: theme.textSecondary }]}>
-            {themeMode === 'dark' ? 'Mode Gelap Aktif' : 'Mode Terang Aktif'}
-          </Text>
-        </View>
-        <Switch
-          value={themeMode === 'dark'}
-          onValueChange={toggleTheme}
-          trackColor={{ false: theme.textSecondary, true: theme.primary }}
-          thumbColor="#FFFFFF"
+      <View style={[styles.storeCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Text style={[styles.storeTitle, { color: theme.text }]}>Pengaturan Toko 🏪</Text>
+        <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Nama Toko</Text>
+        <TextInput
+          style={[styles.input, { backgroundColor: theme.surface, color: theme.text, borderColor: theme.border }]}
+          placeholder="Nama Toko"
+          placeholderTextColor={theme.textSecondary}
+          value={storeData.name}
+          onChangeText={text => setStoreData({ ...storeData, name: text })}
         />
+        <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Alamat Toko</Text>
+        <TextInput
+          style={[styles.input, { backgroundColor: theme.surface, color: theme.text, borderColor: theme.border }]}
+          placeholder="Alamat lengkap toko"
+          placeholderTextColor={theme.textSecondary}
+          value={storeData.address}
+          onChangeText={text => setStoreData({ ...storeData, address: text })}
+        />
+        <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Nomor HP</Text>
+        <TextInput
+          style={[styles.input, { backgroundColor: theme.surface, color: theme.text, borderColor: theme.border }]}
+          placeholder="0812-xxxx-xxxx"
+          placeholderTextColor={theme.textSecondary}
+          keyboardType="phone-pad"
+          value={storeData.phone}
+          onChangeText={text => setStoreData({ ...storeData, phone: text })}
+        />
+        <TouchableOpacity
+          style={[styles.btnSaveStore, { backgroundColor: theme.primary }]}
+          onPress={handleSaveStore}
+          disabled={isStoreSaving}
+        >
+          {isStoreSaving ? (
+            <ActivityIndicator color="#FFF" size="small" />
+          ) : (
+            <Text style={styles.btnSaveStoreText}>Simpan Pengaturan Toko</Text>
+          )}
+        </TouchableOpacity>
       </View>
 
       {loading ? (
@@ -537,4 +589,27 @@ const styles = StyleSheet.create({
   },
   themeTitle: { fontSize: 15, fontWeight: '700' },
   themeSub: { fontSize: 12, marginTop: 2 },
+  storeCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  storeTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  btnSaveStore: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  btnSaveStoreText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 15,
+  },
 });

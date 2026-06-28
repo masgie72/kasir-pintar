@@ -1,7 +1,7 @@
-import RNBluetoothClassic from 'react-native-bluetooth-classic';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
-import { connectPrinter, printText, disconnectAll } from '../utils/printer';
+import { printText, disconnectAll } from '../utils/printer';
+import { getStoreData } from './storeService';
 
 export const cetakStrukKasir = async (dataTransaksi: {
   nota: string;
@@ -17,6 +17,8 @@ export const cetakStrukKasir = async (dataTransaksi: {
       return;
     }
 
+    const store = await getStoreData();
+
     const ESC = '\u001b';
     const initPrinter = `${ESC}@`;
     const alignCenter = `${ESC}a\u0001`;
@@ -25,8 +27,10 @@ export const cetakStrukKasir = async (dataTransaksi: {
     let struk = '';
     struk += initPrinter;
     struk += alignCenter;
-    struk += "KASIR PINTAR TOKO\n";
-    struk += "Jl. Pahlawan No. 10, Tegal\n";
+    struk += `${store.name}\n`;
+    struk += `${store.address}\n`;
+    struk += `Telp: ${store.phone}\n`;
+    struk += "--------------------------------\n";
     struk += `No. Nota: ${dataTransaksi.nota}\n`;
     struk += "================================\n";
 
@@ -52,7 +56,7 @@ export const cetakStrukKasir = async (dataTransaksi: {
 
     struk += "\n";
     struk += alignCenter;
-    struk += "Terima Kasih Atas\nKunjungan Anda \ud83d\ude0f\n\n\n\n";
+    struk += "Terima Kasih Atas\nKunjungan Anda\n\n\n\n";
 
     const success = await printText(printerAddress, struk);
     if (!success) {

@@ -1,8 +1,20 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 9,
+  version: 10,
   tables: [
+    tableSchema({
+      name: 'stores',
+      columns: [
+        { name: 'name', type: 'string' },
+        { name: 'address', type: 'string' },
+        { name: 'phone', type: 'string' },
+        { name: 'ppn_percentage', type: 'number' },
+        { name: 'device_id', type: 'string', isIndexed: true },
+        { name: 'updated_at', type: 'number', isIndexed: true },
+        { name: 'is_synced', type: 'boolean' },
+      ],
+    }),
     tableSchema({
       name: 'categories',
       columns: [
