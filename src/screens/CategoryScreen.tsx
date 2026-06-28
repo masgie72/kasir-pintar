@@ -135,14 +135,15 @@ export default function CategoryScreen({ navigation }: any) {
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.searchWrap, { backgroundColor: theme.surface }]}>
-        <TextInput
-          style={[styles.search, { backgroundColor: theme.borderLight, color: theme.text }]}
-          placeholder="Cari kategori..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
+<View style={[styles.searchWrap, { backgroundColor: theme.surface }]}>
+         <TextInput
+           style={[styles.search, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]}
+           placeholder="Cari kategori..."
+           placeholderTextColor={theme.textSecondary}
+           value={searchQuery}
+           onChangeText={setSearchQuery}
+         />
+       </View>
 
       {loading ? (
         <View style={styles.center}><ActivityIndicator /></View>
