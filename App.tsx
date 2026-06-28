@@ -429,7 +429,7 @@ function NavigationContent({ isLoggedIn, userRole, onLogoutSuccess }: any) {
               <Stack.Screen
                 name="EditProduct"
                 component={EditProductScreen}
-                options={{ title: 'Edit Produk' }}
+                options={{ headerShown: false }}
               />
               <Stack.Screen
                 name="Setting"
