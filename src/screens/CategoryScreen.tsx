@@ -162,8 +162,20 @@ export default function CategoryScreen({ navigation }: any) {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.overlay}>
           <View style={[styles.modal, { backgroundColor: theme.card }]}>
             <Text style={[styles.modalTitle, { color: theme.text }]}>{editingCategory ? 'Edit Kategori' : 'Tambah Kategori'}</Text>
-            <TextInput style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]} placeholder="Nama Kategori *" value={name} onChangeText={setName} />
-            <TextInput style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]} placeholder="Deskripsi (opsional)" value={description} onChangeText={setDescription} />
+<TextInput
+               style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]}
+               placeholder="Nama Kategori *"
+               placeholderTextColor={theme.textSecondary}
+               value={name}
+               onChangeText={setName}
+             />
+             <TextInput
+               style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]}
+               placeholder="Deskripsi (opsional)"
+               placeholderTextColor={theme.textSecondary}
+               value={description}
+               onChangeText={setDescription}
+             />
             <View style={styles.modalActions}>
               <TouchableOpacity style={[styles.cancelBtn, { backgroundColor: theme.borderLight }]} onPress={() => setModalVisible(false)} disabled={saving}>
                 <Text style={[styles.cancelText, { color: theme.textSecondary }]}>Batal</Text>
