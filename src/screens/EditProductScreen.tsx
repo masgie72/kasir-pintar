@@ -11,6 +11,7 @@ import {
   Platform,
   Modal,
   FlatList,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { database } from '../database';
@@ -18,7 +19,7 @@ import { useTheme } from '../theme/ThemeContext';
 import Category from '../database/models/Category';
 
 export default function EditProductScreen({ route, navigation }: any) {
-  const { theme } = useTheme();
+  const { theme, themeMode } = useTheme();
   const { productId } = route.params;
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
@@ -84,26 +85,32 @@ export default function EditProductScreen({ route, navigation }: any) {
 
   if (loading) {
     return (
-      <View style={styles.center}><ActivityIndicator size="large" color={theme.primary} /></View>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['bottom']}>
+        <View style={styles.center}><ActivityIndicator size="large" color={theme.primary} /></View>
+      </SafeAreaView>
     );
   }
 
   const selectedCategory = categories.find(c => c.id === selectedCategoryId);
 
-  const renderCategoryItem = ({ item }: { item: Category }) => (
+  const renderCategoryItem = ({ item }: { item: Category }) => {
+    const isActive = selectedCategoryId === item.id;
+    return (
     <TouchableOpacity
-      style={[styles.categoryItem, selectedCategoryId === item.id && styles.categoryItemActive]}
+      style={[styles.categoryItem, { borderBottomColor: theme.border, backgroundColor: isActive ? theme.primaryLight : 'transparent' }]}
       onPress={() => { setSelectedCategoryId(item.id); setShowCategoryModal(false); }}
     >
-      <Text style={[styles.categoryName, selectedCategoryId === item.id && styles.categoryNameActive]}>
+      <Text style={[styles.categoryName, { color: isActive ? theme.primary : theme.text }]}>
         {item.name}
       </Text>
-      {selectedCategoryId === item.id && <Text style={{ color: theme.primary, fontWeight: '700' }}>✓</Text>}
+      {isActive && <Text style={{ color: theme.primary, fontWeight: '700' }}>✓</Text>}
     </TouchableOpacity>
-  );
+    );
+  };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['bottom']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={themeMode === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <View style={styles.form}>
           <Text style={[styles.label, { color: theme.textSecondary }]}>Nama Produk</Text>
@@ -178,9 +185,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     padding: 14, borderBottomWidth: 1,
   },
-  categoryItemActive: { backgroundColor: '#EFF6FF' },
   categoryName: { fontSize: 15, fontWeight: '600' },
-  categoryNameActive: { color: '#2563EB' },
   empty: { textAlign: 'center', paddingVertical: 12 },
   closeBtn: { marginTop: 12, paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
   closeText: { fontWeight: '700', fontSize: 15 },
