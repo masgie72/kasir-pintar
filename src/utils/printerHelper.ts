@@ -1,6 +1,7 @@
 import RNBluetoothClassic from 'react-native-bluetooth-classic';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
+import { getStoreData } from '../services/storeService';
 
 // Fungsi untuk merapikan baris belanja
 const formatReceiptRow = (name: string, qty: number, price: number) => {
@@ -12,8 +13,9 @@ const formatReceiptRow = (name: string, qty: number, price: number) => {
 };
 
 // Fungsi untuk menyusun isi struk
-export const generateReceiptText = (items: any[], total: number) => {
-  let text = "       TOKO KELONTONG        \n";
+export const generateReceiptText = async (items: any[], total: number) => {
+  const store = await getStoreData();
+  let text = `       ${store.name}        \n`;
   text += "================================\n";
   items.forEach(item => {
     text += formatReceiptRow(item.name, item.qty, item.price) + "\n";
@@ -34,7 +36,7 @@ export const printReceipt = async (items: any[], total: number) => {
     }
 
     const device = await RNBluetoothClassic.connectToDevice(address);
-    const text = generateReceiptText(items, total);
+    const text = await generateReceiptText(items, total);
     await device.write(text);
     await device.disconnect();
     Alert.alert("Sukses", "Struk berhasil dicetak.");

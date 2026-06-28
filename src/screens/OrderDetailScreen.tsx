@@ -16,6 +16,7 @@ import Order from '../database/models/Order';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../theme/ThemeContext';
 import { printText } from '../utils/printer';
+import { getStoreData } from '../services/storeService';
 
 export default function OrderDetailScreen({ route, navigation }: any) {
   const { theme, themeMode } = useTheme();
@@ -103,12 +104,13 @@ export default function OrderDetailScreen({ route, navigation }: any) {
 
       let struk = '';
 
+      const store = await getStoreData();
+
       struk += initPrinter;
       struk += alignCenter;
-      struk += 'KASIR PINTAR TOKO\n';
-      struk += 'Detail Riwayat Transaksi\n';
-      struk += `ID: #${orderId?.slice(-6).toUpperCase()}\n`;
-      struk += `Kasir: ${kasirName}\n`;
+      struk += `${store.name}\n`;
+      struk += `${store.address}\n`;
+      struk += `Telp: ${store.phone}\n`;
       struk += '--------------------------------\n';
 
       struk += alignLeft;

@@ -419,7 +419,7 @@ function NavigationContent({ isLoggedIn, userRole, onLogoutSuccess }: any) {
               <Stack.Screen
                 name="OrderDetail"
                 component={OrderDetailScreen}
-                options={{ title: 'Detail Transaksi' }}
+                options={{ title: 'Detail Transaksi', headerShown:false }}
               />
               <Stack.Screen
                 name="Report"
