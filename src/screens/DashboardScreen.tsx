@@ -278,23 +278,23 @@ export default function DashboardScreen({
             <TouchableOpacity
               style={[
                 styles.menuCard,
-                { backgroundColor: theme.successLight, width: '100%', borderColor: theme.border },
+                { backgroundColor: theme.primaryLight, width: '100%', borderColor: theme.border },
               ]}
               onPress={() => navigation.navigate('Report')}
             >
               <Text style={styles.menuIcon}>📊</Text>
-              <Text style={[styles.menuText, { color: theme.success }]}>
+              <Text style={[styles.menuText, { color: theme.primary }]}>
                 Laporan Omzet
               </Text>
             </TouchableOpacity>
           )}
 
           <TouchableOpacity
-            style={[styles.menuCard, { backgroundColor: theme.warningLight, borderColor: theme.border }]}
+            style={[styles.menuCard, { backgroundColor: theme.primaryLight, borderColor: theme.border }]}
             onPress={() => navigation.navigate('PrinterSetting')}
           >
             <Text style={styles.menuIcon}>🖨</Text>
-            <Text style={[styles.menuText, { color: theme.warning }]}>
+            <Text style={[styles.menuText, { color: theme.primary }]}>
               Printer Bluetooth
             </Text>
           </TouchableOpacity>

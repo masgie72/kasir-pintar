@@ -19,6 +19,7 @@ import { database } from '../database';
 import { useTheme } from '../theme/ThemeContext';
 import TrashIcon from '../assets/icons/Trash.svg';
 import EditIcon from '../assets/icons/Edit.svg';
+import { DarkTheme, LightTheme } from '../theme/colors';
 
 export default function ProductScreen({ navigation }: any) {
   const { theme } = useTheme();
@@ -327,7 +328,7 @@ const styles = StyleSheet.create({
   stockTextNormal: { color: '#15803D' },
   stockTextLow: { color: '#B91C1C' },
   actionContainer: { flexDirection: 'row', alignItems: 'center' },
-  editButton: { padding: 8, marginRight: 4 },
+  editButton: { padding: 8, marginRight: 4, },
   deleteButton: { padding: 8 },
   modalOverlay: {
     flex: 1,

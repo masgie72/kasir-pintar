@@ -43,11 +43,11 @@ export default function AboutScreen() {
 
         <Text style={[styles.sectionTitle, { color: theme.text }]}>Kontak Pengembang</Text>
         <TouchableOpacity style={[styles.contactBtn, { backgroundColor: theme.primary }]} onPress={openEmail}>
-          <Text style={styles.contactBtnText}>📧 Email: kasirpintar.dev@gmail.com</Text>
+          <Text style={styles.contactBtnText}>📧 Email: ismetmasgie@gmail.com</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={[styles.contactBtn, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={openWebsite}>
-          <Text style={[styles.contactBtnText, { color: theme.text }]}>🌐 Website: kasirpintar.id</Text>
+          <Text style={[styles.contactBtnText, { color: theme.text }]}>🌐 Website: https://github.com/masgie72/kasir-pintar</Text>
         </TouchableOpacity>
       </View>
 
@@ -90,5 +90,5 @@ const styles = StyleSheet.create({
     borderWidth: 0,
   },
   contactBtnText: { color: '#FFFFFF', fontWeight: '600', fontSize: 14 },
-  copyright: { fontSize: 12, marginTop: 28, fontWeight: '500' },
+  copyright: { fontSize: 12, marginTop: 28, fontWeight: '500', textAlign:'center' },
 });

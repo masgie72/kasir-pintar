@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Platform,
   Alert,
+  StatusBar,
 } from 'react-native';
 import { database } from '../database';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,7 +18,7 @@ import { useTheme } from '../theme/ThemeContext';
 import { printText } from '../utils/printer';
 
 export default function OrderDetailScreen({ route, navigation }: any) {
-  const { theme } = useTheme();
+  const { theme, themeMode } = useTheme();
   const { orderId, total: initialTotal } = route.params ?? {
     orderId: null,
     total: 0,
@@ -147,7 +148,8 @@ export default function OrderDetailScreen({ route, navigation }: any) {
     }
   };
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['bottom']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={themeMode === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
       {/* HEADER UTAMA */}
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <Text style={[styles.headerTitle, { color: theme.text }]}>Detail Transaksi 📄</Text>
