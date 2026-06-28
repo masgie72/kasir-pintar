@@ -85,7 +85,8 @@ export default function EditProductScreen({ route, navigation }: any) {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['bottom']}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+        <StatusBar barStyle={themeMode === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
         <View style={styles.center}><ActivityIndicator size="large" color={theme.primary} /></View>
       </SafeAreaView>
     );
@@ -111,6 +112,12 @@ export default function EditProductScreen({ route, navigation }: any) {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
       <StatusBar barStyle={themeMode === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Text style={[styles.backBtnText, { color: theme.text }]}>←</Text>
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>Edit Produk</Text>
+      </View>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <View style={styles.form}>
           <Text style={[styles.label, { color: theme.textSecondary }]}>Nama Produk</Text>
@@ -161,8 +168,18 @@ export default function EditProductScreen({ route, navigation }: any) {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  backBtn: { padding: 8, marginRight: 4 },
+  backBtnText: { fontSize: 24, fontWeight: '700' },
+  headerTitle: { fontSize: 20, fontWeight: '800', marginLeft: 8 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  form: { flex: 1, padding: 16 },
+  form: { flex: 1, padding: 16, marginTop: 8 },
   label: { fontSize: 14, fontWeight: '700', marginBottom: 6, marginTop: 14 },
   input: {
     borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12,
