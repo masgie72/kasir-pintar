@@ -141,6 +141,7 @@ export default function CheckoutScreen({ navigation, route }: any) {
             <TextInput
               style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]}
               placeholder="0"
+              placeholderTextColor={theme.textSecondary}
               keyboardType="numeric"
               value={discount}
               onChangeText={setDiscount}
@@ -151,6 +152,7 @@ export default function CheckoutScreen({ navigation, route }: any) {
         <TextInput
           style={[styles.input, styles.textArea, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]}
           placeholder="Contoh: Tanpa gula, extra es..."
+          placeholderTextColor={theme.textSecondary}
           value={note}
           onChangeText={setNote}
           multiline

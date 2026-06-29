@@ -157,6 +157,7 @@ export default function DashboardScreen({
   const totalItemsSold = useMemo(() => orderItems.reduce((sum, i) => sum + Number(i.quantity || 0), 0), [orderItems]);
   const profit = totalRevenue - totalCost;
 
+  const totalSales = useMemo(() => salesData.reduce((sum, d) => sum + d.total, 0), [salesData]);
   const maxSale = Math.max(...salesData.map((d) => d.total), 1);
 
   const handleLogout = async () => {

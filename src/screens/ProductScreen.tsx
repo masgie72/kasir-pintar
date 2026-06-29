@@ -34,6 +34,9 @@ export default function ProductScreen({ navigation }: any) {
   const [price, setPrice] = useState('');
   const [costPrice, setCostPrice] = useState('');
   const [stock, setStock] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [categories, setCategories] = useState<any[]>([]);
+  const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // Ambil data produk secara real-time dari WatermelonDB
@@ -53,6 +56,19 @@ export default function ProductScreen({ navigation }: any) {
         },
       });
 
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Ambil data kategori
+  useEffect(() => {
+    const categoriesCollection = database.get('categories');
+    const subscription = categoriesCollection
+      .query()
+      .observe()
+      .subscribe({
+        next: data => setCategories(data),
+        error: err => console.error('Gagal memuat kategori:', err),
+      });
     return () => subscription.unsubscribe();
   }, []);
 
@@ -94,25 +110,27 @@ export default function ProductScreen({ navigation }: any) {
     try {
       const productsCollection = database.get('products');
 
-      await database.write(async () => {
-        await productsCollection.create((newProduct: any) => {
-          newProduct.name = name.trim();
-          newProduct.price = Number(price);
-          newProduct.costPrice = Number(costPrice);
-          newProduct.stock = Number(stock);
-          newProduct.isActive = true;
-          newProduct.deviceId = 'local';
-          newProduct.updatedAt = new Date();
-          newProduct.isSynced = false;
+        await database.write(async () => {
+          await productsCollection.create((newProduct: any) => {
+            newProduct.name = name.trim();
+            newProduct.price = Number(price);
+            newProduct.costPrice = Number(costPrice);
+            newProduct.stock = Number(stock);
+            newProduct.categoryId = selectedCategoryId;
+            newProduct.isActive = true;
+            newProduct.deviceId = 'local';
+            newProduct.updatedAt = new Date();
+            newProduct.isSynced = false;
+          });
         });
-      });
 
-      Alert.alert('Sukses', 'Produk baru berhasil ditambahkan!');
-      setName('');
-      setPrice('');
-      setCostPrice('');
-      setStock('');
-      setIsModalVisible(false);
+        Alert.alert('Sukses', 'Produk baru berhasil ditambahkan!');
+        setName('');
+        setPrice('');
+        setCostPrice('');
+        setStock('');
+        setSelectedCategoryId('');
+        setIsModalVisible(false);
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'Gagal menyimpan produk ke database.');
@@ -245,6 +263,16 @@ export default function ProductScreen({ navigation }: any) {
             <TextInput style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]} placeholder="Contoh: 12000" placeholderTextColor={theme.textSecondary} keyboardType="numeric" value={costPrice} onChangeText={setCostPrice} />
             <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Jumlah Stok Awal</Text>
             <TextInput style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]} placeholder="Contoh: 50" placeholderTextColor={theme.textSecondary} keyboardType="numeric" value={stock} onChangeText={setStock} />
+            <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Kategori Produk</Text>
+            <TouchableOpacity
+              style={[styles.input, styles.pickerTrigger, { backgroundColor: theme.inputBackground, borderColor: theme.border }]}
+              onPress={() => setIsCategoryPickerVisible(true)}
+            >
+              <Text style={{ color: selectedCategoryId ? theme.text : theme.textSecondary }}>
+                {categories.find(c => c.id === selectedCategoryId)?.name || 'Pilih Kategori'}
+              </Text>
+              <Text style={{ color: theme.textSecondary }}>▼</Text>
+            </TouchableOpacity>
             <View style={styles.modalActions}>
               <TouchableOpacity style={[styles.btnCancel, { backgroundColor: theme.borderLight }]} onPress={() => setIsModalVisible(false)} disabled={isSaving}>
                 <Text style={[styles.btnCancelText, { color: theme.textSecondary }]}>Batal</Text>
@@ -253,6 +281,46 @@ export default function ProductScreen({ navigation }: any) {
                 {isSaving ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.btnSubmitText}>Simpan</Text>}
               </TouchableOpacity>
             </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal visible={isCategoryPickerVisible} animationType="slide" transparent>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Pilih Kategori</Text>
+            {categories.length === 0 ? (
+              <Text style={[styles.emptyText, { color: theme.textSecondary }]}>Belum ada kategori tersedia</Text>
+            ) : (
+              <FlatList
+                data={categories}
+                keyExtractor={item => item.id}
+                style={{ maxHeight: 300 }}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.categoryOption,
+                      { borderBottomColor: theme.border },
+                      selectedCategoryId === item.id && { backgroundColor: theme.primaryLight },
+                    ]}
+                    onPress={() => {
+                      setSelectedCategoryId(item.id);
+                      setIsCategoryPickerVisible(false);
+                    }}
+                  >
+                    <Text style={[styles.categoryOptionText, { color: selectedCategoryId === item.id ? theme.primary : theme.text }]}>
+                      {item.name}
+                    </Text>
+                    {selectedCategoryId === item.id && (
+                      <Text style={{ color: theme.primary }}>✓</Text>
+                    )}
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+            <TouchableOpacity style={[styles.btnCancel, { backgroundColor: theme.borderLight }]} onPress={() => setIsCategoryPickerVisible(false)}>
+              <Text style={[styles.btnCancelText, { color: theme.textSecondary }]}>Tutup</Text>
+            </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -359,6 +427,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 16,
   },
+  pickerTrigger: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   modalActions: { flexDirection: 'row', marginTop: 8 },
   btnCancel: {
     flex: 1,
@@ -375,4 +448,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   btnSubmitText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
+  categoryOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 14,
+    borderBottomWidth: 1,
+  },
+  categoryOptionText: { fontSize: 15, fontWeight: '500' },
 });

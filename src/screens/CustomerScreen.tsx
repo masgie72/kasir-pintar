@@ -175,10 +175,10 @@ export default function CustomerScreen({ navigation }: any) {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.overlay}>
           <View style={[styles.modal, { backgroundColor: theme.card }]}>
             <Text style={[styles.modalTitle, { color: theme.text }]}>{editingCustomer ? 'Edit Pelanggan' : 'Tambah Pelanggan'}</Text>
-            <TextInput style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]} placeholder="Nama *" value={name} onChangeText={setName} />
-            <TextInput style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]} placeholder="Telepon *" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
-            <TextInput style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]} placeholder="Email" value={email} onChangeText={setEmail} />
-            <TextInput style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]} placeholder="Alamat" value={address} onChangeText={setAddress} />
+            <TextInput style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]} placeholder="Nama *" placeholderTextColor={theme.textSecondary} value={name} onChangeText={setName} />
+            <TextInput style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]} placeholder="Telepon *" placeholderTextColor={theme.textSecondary} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+            <TextInput style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]} placeholder="Email" placeholderTextColor={theme.textSecondary} value={email} onChangeText={setEmail} />
+            <TextInput style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]} placeholder="Alamat" placeholderTextColor={theme.textSecondary} value={address} onChangeText={setAddress} />
             <View style={styles.modalActions}>
               <TouchableOpacity style={[styles.cancelBtn, { backgroundColor: theme.borderLight }]} onPress={() => setModalVisible(false)} disabled={saving}>
                 <Text style={[styles.cancelText, { color: theme.textSecondary }]}>Batal</Text>

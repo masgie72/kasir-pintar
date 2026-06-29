@@ -17,6 +17,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { database } from '../database';
 import { useTheme } from '../theme/ThemeContext';
 import Category from '../database/models/Category';
+import EditIcon from '../assets/icons/Edit.svg';
+import TrashIcon from '../assets/icons/Trash.svg';
 
 export default function CategoryScreen({ navigation }: any) {
   const { theme } = useTheme();
@@ -113,11 +115,11 @@ export default function CategoryScreen({ navigation }: any) {
         {item.description ? <Text style={[styles.desc, { color: theme.textSecondary }]}>{item.description}</Text> : null}
       </View>
       <View style={styles.actions}>
-        <TouchableOpacity style={[styles.editBtn, { backgroundColor: theme.primaryLight }]} onPress={() => openEdit(item)}>
-          <Text style={[styles.editText, { color: theme.primary }]}>Edit</Text>
+        <TouchableOpacity style={[styles.iconBtn, { backgroundColor: theme.primaryLight }]} onPress={() => openEdit(item)}>
+          <EditIcon width={18} height={18} fill={theme.primary} />
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.delBtn, { backgroundColor: theme.dangerLight }]} onPress={() => handleDelete(item)}>
-          <Text style={[styles.delText, { color: theme.danger }]}>Hapus</Text>
+        <TouchableOpacity style={[styles.iconBtn, { backgroundColor: theme.dangerLight }]} onPress={() => handleDelete(item)}>
+          <TrashIcon width={16} height={16} fill={theme.danger} />
         </TouchableOpacity>
       </View>
     </View>
@@ -213,10 +215,7 @@ const styles = StyleSheet.create({
   name: { fontSize: 16, fontWeight: '700' },
   desc: { fontSize: 13, marginTop: 2 },
   actions: { flexDirection: 'row', gap: 8 },
-  editBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  editText: { fontWeight: '600', fontSize: 13 },
-  delBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  delText: { fontWeight: '600', fontSize: 13 },
+  iconBtn: { padding: 8, borderRadius: 8 },
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   modal: { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: Platform.OS === 'ios' ? 40 : 24 },
   modalTitle: { fontSize: 18, fontWeight: '800', marginBottom: 16, textAlign: 'center' },
