@@ -7,19 +7,19 @@ const SALT_KEY = 'toko-intan-salt-2026';
 
 const SEED_USERS = [
   {
-    name: 'Pemilik Toko (Owner)',
+    name: 'Slamet Sugiman',
     email: 'ismetmasgie@gmail.com',
     pin: 'intan72',
     role: 'owner', 
   },
   {
-    name: 'Administrator Toko',
+    name: 'Admin',
     email: 'admin@toko.com',
     pin: 'admin123', 
     role: 'admin',  
   },
   {
-    name: 'Kasir Utama',
+    name: 'Kasir',
     email: 'kasir1@toko.com',
     pin: 'kasir123', 
     role: 'kasir',  

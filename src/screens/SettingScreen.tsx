@@ -37,6 +37,7 @@ export default function SettingScreen({ navigation }: Props) {
   const [isStoreSaving, setIsStoreSaving] = useState(false);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isStoreModalVisible, setIsStoreModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -237,45 +238,18 @@ export default function SettingScreen({ navigation }: Props) {
         />
       </View>
 
-      <View style={[styles.storeCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text style={[styles.storeTitle, { color: theme.text }]}>Pengaturan Toko</Text>
-        <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Nama Toko</Text>
-        <TextInput
-          style={[styles.input, { backgroundColor: theme.surface, color: theme.text, borderColor: theme.border }]}
-          placeholder="Nama Toko"
-          placeholderTextColor={theme.textSecondary}
-          value={storeData.name}
-          onChangeText={text => setStoreData({ ...storeData, name: text })}
-        />
-        <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Alamat Toko</Text>
-        <TextInput
-          style={[styles.input, { backgroundColor: theme.surface, color: theme.text, borderColor: theme.border }]}
-          placeholder="Alamat lengkap toko"
-          placeholderTextColor={theme.textSecondary}
-          value={storeData.address}
-          onChangeText={text => setStoreData({ ...storeData, address: text })}
-        />
-        <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Nomor HP</Text>
-        <TextInput
-          style={[styles.input, { backgroundColor: theme.surface, color: theme.text, borderColor: theme.border }]}
-          placeholder="0812-xxxx-xxxx"
-          placeholderTextColor={theme.textSecondary}
-          keyboardType="phone-pad"
-          value={storeData.phone}
-          onChangeText={text => setStoreData({ ...storeData, phone: text })}
-        />
-        <TouchableOpacity
-          style={[styles.btnSaveStore, { backgroundColor: theme.primary }]}
-          onPress={handleSaveStore}
-          disabled={isStoreSaving}
-        >
-          {isStoreSaving ? (
-            <ActivityIndicator color="#FFF" size="small" />
-          ) : (
-            <Text style={styles.btnSaveStoreText}>Simpan Pengaturan Toko</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={[styles.storeSummaryBtn, { backgroundColor: theme.card, borderColor: theme.border }]}
+        onPress={() => setIsStoreModalVisible(true)}
+      >
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.storeSummaryTitle, { color: theme.text }]}>Pengaturan Toko</Text>
+          <Text style={[styles.storeSummaryText, { color: theme.textSecondary }]} numberOfLines={1}>
+            {storeData.name} · {storeData.phone}
+          </Text>
+        </View>
+        <Text style={[styles.storeSummaryArrow, { color: theme.textSecondary }]}>›</Text>
+      </TouchableOpacity>
 
       {loading ? (
         <View style={styles.centerContainer}>
@@ -397,6 +371,67 @@ export default function SettingScreen({ navigation }: Props) {
                 disabled={isSaving}
               >
                 {isSaving ? (
+                  <ActivityIndicator color="#FFF" size="small" />
+                ) : (
+                  <Text style={styles.btnSubmitText}>Simpan</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal visible={isStoreModalVisible} animationType="slide" transparent>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Pengaturan Toko</Text>
+
+            <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Nama Toko</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: theme.surface, color: theme.text, borderColor: theme.border }]}
+              placeholder="Nama Toko"
+              placeholderTextColor={theme.textSecondary}
+              value={storeData.name}
+              onChangeText={text => setStoreData({ ...storeData, name: text })}
+            />
+
+            <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Alamat Toko</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: theme.surface, color: theme.text, borderColor: theme.border }]}
+              placeholder="Alamat lengkap toko"
+              placeholderTextColor={theme.textSecondary}
+              value={storeData.address}
+              onChangeText={text => setStoreData({ ...storeData, address: text })}
+            />
+
+            <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Nomor HP</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: theme.surface, color: theme.text, borderColor: theme.border }]}
+              placeholder="0812-xxxx-xxxx"
+              placeholderTextColor={theme.textSecondary}
+              keyboardType="phone-pad"
+              value={storeData.phone}
+              onChangeText={text => setStoreData({ ...storeData, phone: text })}
+            />
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.btnCancel, { backgroundColor: theme.surface }]}
+                onPress={() => setIsStoreModalVisible(false)}
+                disabled={isStoreSaving}
+              >
+                <Text style={[styles.btnCancelText, { color: theme.textSecondary }]}>Batal</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.btnSubmit, { backgroundColor: theme.primary }]}
+                onPress={handleSaveStore}
+                disabled={isStoreSaving}
+              >
+                {isStoreSaving ? (
                   <ActivityIndicator color="#FFF" size="small" />
                 ) : (
                   <Text style={styles.btnSubmitText}>Simpan</Text>
@@ -604,27 +639,17 @@ const styles = StyleSheet.create({
   },
   themeTitle: { fontSize: 15, fontWeight: '700' },
   themeSub: { fontSize: 12, marginTop: 2 },
-  storeCard: {
+  storeSummaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderRadius: 16,
     padding: 16,
     marginHorizontal: 16,
-    marginBottom: 16,
+    marginVertical: 12,
     borderWidth: 1,
   },
-  storeTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 12,
-  },
-  btnSaveStore: {
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  btnSaveStoreText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 15,
-  },
+  storeSummaryTitle: { fontSize: 15, fontWeight: '700' },
+  storeSummaryText: { fontSize: 12, marginTop: 2 },
+  storeSummaryArrow: { fontSize: 24, fontWeight: '700' },
 });

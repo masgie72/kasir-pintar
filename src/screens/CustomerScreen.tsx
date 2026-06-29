@@ -150,8 +150,9 @@ export default function CustomerScreen({ navigation }: any) {
 
       <View style={[styles.searchWrap, { backgroundColor: theme.surface }]}>
         <TextInput
-          style={[styles.search, { backgroundColor: theme.borderLight, color: theme.text }]}
+          style={[styles.search, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]}
           placeholder="Cari nama / telepon..."
+          placeholderTextColor={theme.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -205,7 +206,7 @@ const styles = StyleSheet.create({
   addBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
   addBtnText: { fontWeight: '700', fontSize: 13 },
   searchWrap: { paddingHorizontal: 16, paddingVertical: 10 },
-  search: { borderRadius: 10, paddingHorizontal: 14, height: 42, fontSize: 15 },
+  search: { borderRadius: 10, paddingHorizontal: 14, height: 42, fontSize: 15, borderWidth: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   empty: { textAlign: 'center', marginTop: 40 },
   card: {

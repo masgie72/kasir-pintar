@@ -220,6 +220,10 @@ export default function DashboardScreen({
               color={theme.primary}
               style={{ marginVertical: 40 }}
             />
+          ) : totalSales === 0 ? (
+            <Text style={[styles.emptyChartText, { color: theme.textSecondary }]}>
+              Belum ada transaksi minggu ini
+            </Text>
           ) : (
             <View style={styles.chartWrapper}>
               {salesData.map((item, index) => {
@@ -396,6 +400,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   barLabel: { fontSize: 11, marginTop: 8, fontWeight: '600' },
+  emptyChartText: { fontSize: 14, fontWeight: '500', textAlign: 'center', marginVertical: 40 },
   valueLabel: { marginBottom: 4, minHeight: 18, justifyContent: 'center', alignItems: 'center' },
   valueText: { fontSize: 10, fontWeight: '700' },
   summaryRow: { flexDirection: 'row', marginBottom: 16 },
