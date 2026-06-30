@@ -45,6 +45,7 @@ export default function CheckoutScreen({ navigation, route }: any) {
   const [discount, setDiscount] = useState('');
   const [note, setNote] = useState('');
   const [ppnPercentage, setPpnPercentage] = useState(11);
+  const [amountPaid, setAmountPaid] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -59,6 +60,8 @@ export default function CheckoutScreen({ navigation, route }: any) {
   const taxableAmount = subtotal - discountAmount;
   const tax = Math.round(taxableAmount * (ppnPercentage / 100));
   const total = taxableAmount + tax;
+  const paidAmount = Number(amountPaid) || 0;
+  const change = Math.max(0, paidAmount - total);
 
   useEffect(() => {
     const sub = database.get<Customer>('customers').query().observe().subscribe({
@@ -84,12 +87,19 @@ export default function CheckoutScreen({ navigation, route }: any) {
       Alert.alert('Info', 'Keranjang belanja kosong.');
       return;
     }
+    if (paidAmount < total) {
+      Alert.alert('Gagal', 'Uang yang dibayarkan kurang dari total belanja.');
+      return;
+    }
     setIsProcessing(true);
     try {
       const deviceId = await AsyncStorage.getItem('device_id');
       const userId = route.params?.userId || 'local_user';
-      const orderId = await createOrder(userId, total, items, deviceId ?? '', paymentMethod, selectedCustomerId || undefined);
+      const orderId = await createOrder(userId, total, items, deviceId ?? '', paymentMethod, selectedCustomerId || undefined, paidAmount);
       clearCart();
+      setAmountPaid('');
+      setDiscount('');
+      setNote('');
       Alert.alert('Sukses', 'Transaksi berhasil diproses!', [
         { text: 'Lihat Detail', onPress: () => navigation.replace('OrderDetail', { orderId }) },
         { text: 'OK', onPress: () => navigation.goBack() },
@@ -182,6 +192,29 @@ export default function CheckoutScreen({ navigation, route }: any) {
             <Text style={[styles.totalValue, { color: theme.primary }]}>Rp {total.toLocaleString('id-ID')}</Text>
           </View>
         </View>
+
+        <Text style={[styles.sectionTitle, { color: theme.text }]}>Pembayaran</Text>
+        <View style={[styles.summaryCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={styles.summaryRow}>
+            <Text style={[styles.summaryLabel, { color: theme.textSecondary }]}>Total Bayar</Text>
+            <Text style={[styles.summaryValue, { color: theme.primary }]}>Rp {total.toLocaleString('id-ID')}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={[styles.summaryLabel, { color: theme.textSecondary }]}>Uang Diterima</Text>
+            <TextInput
+              style={[styles.amountInput, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]}
+              placeholder="0"
+              placeholderTextColor={theme.textSecondary}
+              keyboardType="numeric"
+              value={amountPaid}
+              onChangeText={setAmountPaid}
+            />
+          </View>
+          <View style={[styles.summaryRow, styles.totalRow]}>
+            <Text style={[styles.totalLabel, { color: theme.text }]}>Kembalian</Text>
+            <Text style={[styles.totalValue, { color: change > 0 ? theme.success : theme.textSecondary }]}>Rp {change.toLocaleString('id-ID')}</Text>
+          </View>
+        </View>
       </ScrollView>
 
       <View style={[styles.bottomBar, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -189,7 +222,7 @@ export default function CheckoutScreen({ navigation, route }: any) {
           <Text style={[styles.bottomLabel, { color: theme.textSecondary }]}>Total Bayar</Text>
           <Text style={[styles.bottomTotal, { color: theme.text }]}>Rp {total.toLocaleString('id-ID')}</Text>
         </View>
-        <TouchableOpacity style={[styles.payBtn, isProcessing && styles.payBtnDisabled, { backgroundColor: theme.primary }]} onPress={processCheckout} disabled={isProcessing || items.length === 0}>
+        <TouchableOpacity style={[styles.payBtn, isProcessing && styles.payBtnDisabled, { backgroundColor: theme.primary }]} onPress={processCheckout} disabled={isProcessing || items.length === 0 || paidAmount < total}>
           {isProcessing ? <ActivityIndicator color="#fff" /> : <Text style={styles.payBtnText}>Bayar Sekarang</Text>}
         </TouchableOpacity>
       </View>
@@ -243,6 +276,7 @@ const styles = StyleSheet.create({
   formRow: { flexDirection: 'row', gap: 10 },
   fieldLabel: { fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 4 },
   input: { borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, borderWidth: 1, marginBottom: 10 },
+  amountInput: { borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, borderWidth: 1, marginBottom: 10, minWidth: 140, textAlign: 'right' },
   textArea: { height: 80, textAlignVertical: 'top' },
   summaryCard: { borderRadius: 14, padding: 16, borderWidth: 1 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },

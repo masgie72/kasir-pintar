@@ -120,10 +120,11 @@ export default function OrderDetailScreen({ route, navigation }: any) {
       const diskonVal = orderData?.discount || 0; 
       
       const store = await getStoreData();
-      const ppnPercent = store.ppnPercentage || 11;
+      const ppnPercent = store.ppnPercentage;
       
       const discAfterDiscount = subtotalVal - diskonVal;
-      const pajakVal = Math.round(discAfterDiscount * (ppnPercent / 100));       
+      const pajakVal = Math.round(discAfterDiscount * (ppnPercent / 100));
+      const totalDenganPpn = discAfterDiscount + pajakVal;       
       
       // Uang tunai yang dibayarkan dan kembaliannya
       const tunaiVal = orderData?.amountPaid || total; 
@@ -138,10 +139,10 @@ export default function OrderDetailScreen({ route, navigation }: any) {
         item: items,
         subtotal: subtotalVal,
         diskonNominal: diskonVal,
-        diskonPersen: orderData?.discountPercentage || undefined, // Masukkan persentase diskon jika ada
+        diskonPersen: orderData?.discountPercentage || undefined,
         pajakNominal: pajakVal,
         pajakPersen: ppnPercent > 0 ? ppnPercent : undefined,
-        total: total,
+        total: totalDenganPpn,
         bayar: tunaiVal,
         kembali: kembaliVal
       });

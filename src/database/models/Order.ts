@@ -19,6 +19,7 @@ export default class Order extends Model {
   @field('total_price') totalPrice!: number;
   @field('status') status!: string;
   @field('payment_method') paymentMethod!: string;
+  @field('amount_paid') amountPaid!: number;
   
   // BARU untuk multi-kasir
   @field('device_id') deviceId!: string;

@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 10,
+  version: 11,
   tables: [
     tableSchema({
       name: 'stores',
@@ -70,6 +70,7 @@ export default appSchema({
         { name: 'is_synced', type: 'boolean' },
         { name: 'deleted_at', type: 'number' },
         { name: 'device_id', type: 'string', isIndexed: true },
+        { name: 'amount_paid', type: 'number' },
       ],
     }),
     tableSchema({

@@ -186,5 +186,14 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 11,
+      steps: [
+        addColumns({
+          table: 'orders',
+          columns: [{ name: 'amount_paid', type: 'number' }],
+        }),
+      ],
+    },
   ],
 })

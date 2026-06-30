@@ -7,6 +7,7 @@ export const createOrder = async (
   deviceId: string,
   paymentMethod: string = 'cash',
   customerId?: string,
+  amountPaid?: number,
 ): Promise<string> => {
   const db = database;
   if (!db) throw new Error('Database tidak terinisialisasi!');
@@ -23,6 +24,7 @@ export const createOrder = async (
       order.totalPrice = totalPrice;
       order.status = 'paid';
       order.paymentMethod = paymentMethod;
+      order.amountPaid = Number(amountPaid) || totalPrice;
       order.shiftId = 'shift-' + deviceId + '-' + Date.now();
       order.deviceId = deviceId;
       order.createdAt = new Date();

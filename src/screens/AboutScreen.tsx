@@ -36,7 +36,7 @@ export default function AboutScreen() {
 
         <Text style={[styles.sectionTitle, { color: theme.text }]}>Tim Pengembang</Text>
         <View style={styles.devList}>
-          <Text style={[styles.devItem, { color: theme.textSecondary }]}>• Developer: PT. Toko Intan Sejahtera</Text>
+          <Text style={[styles.devItem, { color: theme.textSecondary }]}>• Developer: Slamet Sugiman</Text>
           <Text style={[styles.devItem, { color: theme.textSecondary }]}>• UI/UX Designer: Tim Kasir Pintar</Text>
           <Text style={[styles.devItem, { color: theme.textSecondary }]}>• QA Tester: Tim Pengembangan</Text>
         </View>
