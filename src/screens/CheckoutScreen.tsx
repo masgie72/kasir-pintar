@@ -22,6 +22,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { database } from '../database';
 import { useTheme } from '../theme/ThemeContext';
 import Customer from '../database/models/Customer';
+import { getStoreData } from '../services/storeService';
 
 const { width } = Dimensions.get('window');
 const isTablet = width > 768;
@@ -43,6 +44,7 @@ export default function CheckoutScreen({ navigation, route }: any) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [discount, setDiscount] = useState('');
   const [note, setNote] = useState('');
+  const [ppnPercentage, setPpnPercentage] = useState(11);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -55,7 +57,7 @@ export default function CheckoutScreen({ navigation, route }: any) {
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const discountAmount = Math.min(Number(discount) || 0, subtotal);
   const taxableAmount = subtotal - discountAmount;
-  const tax = Math.round(taxableAmount * 0.11);
+  const tax = Math.round(taxableAmount * (ppnPercentage / 100));
   const total = taxableAmount + tax;
 
   useEffect(() => {
@@ -63,6 +65,18 @@ export default function CheckoutScreen({ navigation, route }: any) {
       next: data => setCustomers(data),
     });
     return () => sub.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const loadPpn = async () => {
+      try {
+        const store = await getStoreData();
+        setPpnPercentage(store.ppnPercentage);
+      } catch (e) {
+        console.error('Gagal memuat persentase PPN:', e);
+      }
+    };
+    loadPpn();
   }, []);
 
   const processCheckout = async () => {
@@ -162,7 +176,7 @@ export default function CheckoutScreen({ navigation, route }: any) {
         <View style={[styles.summaryCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={styles.summaryRow}><Text style={[styles.summaryLabel, { color: theme.textSecondary }]}>Subtotal</Text><Text style={[styles.summaryValue, { color: theme.text }]}>Rp {subtotal.toLocaleString('id-ID')}</Text></View>
           <View style={styles.summaryRow}><Text style={[styles.summaryLabel, { color: theme.textSecondary }]}>Diskon</Text><Text style={[styles.summaryValue, { color: theme.danger }]}>- Rp {discountAmount.toLocaleString('id-ID')}</Text></View>
-          <View style={styles.summaryRow}><Text style={[styles.summaryLabel, { color: theme.textSecondary }]}>PPN 11%</Text><Text style={[styles.summaryValue, { color: theme.text }]}>Rp {tax.toLocaleString('id-ID')}</Text></View>
+          <View style={styles.summaryRow}><Text style={[styles.summaryLabel, { color: theme.textSecondary }]}>PPN {ppnPercentage}%</Text><Text style={[styles.summaryValue, { color: theme.text }]}>Rp {tax.toLocaleString('id-ID')}</Text></View>
           <View style={[styles.summaryRow, styles.totalRow]}>
             <Text style={[styles.totalLabel, { color: theme.text }]}>Total Bayar</Text>
             <Text style={[styles.totalValue, { color: theme.primary }]}>Rp {total.toLocaleString('id-ID')}</Text>

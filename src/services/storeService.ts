@@ -16,7 +16,8 @@ export const getStore = async (): Promise<Store | null> => {
 export const createOrUpdateStore = async (
   name: string,
   address: string,
-  phone: string
+  phone: string,
+  ppnPercentage: number = 0
 ): Promise<void> => {
   await database.write(async () => {
     const existing = await getStore();
@@ -25,6 +26,7 @@ export const createOrUpdateStore = async (
         s.name = name.trim();
         s.address = address.trim();
         s.phone = phone.trim();
+        s.ppnPercentage = Number(ppnPercentage);
         s.updatedAt = new Date();
       });
     } else {
@@ -32,7 +34,7 @@ export const createOrUpdateStore = async (
         s.name = name.trim();
         s.address = address.trim();
         s.phone = phone.trim();
-        s.ppnPercentage = 0;
+        s.ppnPercentage = Number(ppnPercentage);
         s.deviceId = '';
         s.updatedAt = new Date();
         s.isSynced = false;
@@ -45,6 +47,7 @@ export type StoreData = {
   name: string;
   address: string;
   phone: string;
+  ppnPercentage: number;
 };
 
 export const getStoreData = async (): Promise<StoreData> => {
@@ -53,5 +56,6 @@ export const getStoreData = async (): Promise<StoreData> => {
     name: store?.name ?? 'TOKO SUKSES',
     address: store?.address ?? 'Jl. Pahlawan No. 10, Tegal',
     phone: store?.phone ?? '0812-3456-7890',
+    ppnPercentage: Number(store?.ppnPercentage ?? 11),
   };
 };

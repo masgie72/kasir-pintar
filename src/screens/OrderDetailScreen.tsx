@@ -17,7 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../theme/ThemeContext';
 import { printText } from '../utils/printer';
 import { getStoreData } from '../services/storeService';
-import { cetakStrukKasir } from '../services/printReceipt'; 
+import { cetakStrukKasir } from '../services/printReceipt';
 
 export default function OrderDetailScreen({ route, navigation }: any) {
   const { theme, themeMode } = useTheme();
@@ -118,7 +118,12 @@ export default function OrderDetailScreen({ route, navigation }: any) {
       
       // Ambil nilai diskon dan pajak (Asumsi nominal, silakan sesuaikan dengan model database Anda)
       const diskonVal = orderData?.discount || 0; 
-      const pajakVal = orderData?.tax || 0;       
+      
+      const store = await getStoreData();
+      const ppnPercent = store.ppnPercentage || 11;
+      
+      const discAfterDiscount = subtotalVal - diskonVal;
+      const pajakVal = Math.round(discAfterDiscount * (ppnPercent / 100));       
       
       // Uang tunai yang dibayarkan dan kembaliannya
       const tunaiVal = orderData?.amountPaid || total; 
@@ -135,7 +140,7 @@ export default function OrderDetailScreen({ route, navigation }: any) {
         diskonNominal: diskonVal,
         diskonPersen: orderData?.discountPercentage || undefined, // Masukkan persentase diskon jika ada
         pajakNominal: pajakVal,
-        pajakPersen: orderData?.taxPercentage || undefined,       // Masukkan persentase pajak jika ada
+        pajakPersen: ppnPercent > 0 ? ppnPercent : undefined,
         total: total,
         bayar: tunaiVal,
         kembali: kembaliVal

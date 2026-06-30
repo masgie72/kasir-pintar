@@ -33,7 +33,7 @@ export default function SettingScreen({ navigation }: Props) {
   const [currentUserRole, setCurrentUserRole] = useState<string>('kasir');
   const [newAdminToken, setNewAdminToken] = useState('');
   const [activeToken, setActiveToken] = useState('TOKO_SUKSES_123');
-  const [storeData, setStoreData] = useState<StoreData>({ name: '', address: '', phone: '' });
+  const [storeData, setStoreData] = useState<StoreData>({ name: '', address: '', phone: '', ppnPercentage: 11 });
   const [isStoreSaving, setIsStoreSaving] = useState(false);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -54,7 +54,7 @@ export default function SettingScreen({ navigation }: Props) {
 
         const store = await getStore();
         if (store) {
-          setStoreData({ name: store.name, address: store.address, phone: store.phone });
+          setStoreData({ name: store.name, address: store.address, phone: store.phone, ppnPercentage: Number(store.ppnPercentage) || 11 });
         } else {
           const defaults = await getStoreData();
           setStoreData(defaults);
@@ -200,7 +200,7 @@ export default function SettingScreen({ navigation }: Props) {
     }
     setIsStoreSaving(true);
     try {
-      await createOrUpdateStore(storeData.name, storeData.address, storeData.phone);
+      await createOrUpdateStore(storeData.name, storeData.address, storeData.phone, storeData.ppnPercentage);
       Alert.alert('Sukses', 'Data toko berhasil disimpan!');
     } catch (error) {
       Alert.alert('Error', 'Gagal menyimpan data toko.');
@@ -407,17 +407,27 @@ export default function SettingScreen({ navigation }: Props) {
               onChangeText={text => setStoreData({ ...storeData, address: text })}
             />
 
-            <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Nomor HP</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: theme.surface, color: theme.text, borderColor: theme.border }]}
-              placeholder="0812-xxxx-xxxx"
-              placeholderTextColor={theme.textSecondary}
-              keyboardType="phone-pad"
-              value={storeData.phone}
-              onChangeText={text => setStoreData({ ...storeData, phone: text })}
-            />
+             <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Nomor HP</Text>
+             <TextInput
+               style={[styles.input, { backgroundColor: theme.surface, color: theme.text, borderColor: theme.border }]}
+               placeholder="0812-xxxx-xxxx"
+               placeholderTextColor={theme.textSecondary}
+               keyboardType="phone-pad"
+               value={storeData.phone}
+               onChangeText={text => setStoreData({ ...storeData, phone: text })}
+             />
 
-            <View style={styles.modalActions}>
+             <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>PPN (%)</Text>
+             <TextInput
+               style={[styles.input, { backgroundColor: theme.surface, color: theme.text, borderColor: theme.border }]}
+               placeholder="Contoh: 11"
+               placeholderTextColor={theme.textSecondary}
+               keyboardType="numeric"
+               value={String(storeData.ppnPercentage)}
+               onChangeText={text => setStoreData({ ...storeData, ppnPercentage: Number(text) || 0 })}
+             />
+
+             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={[styles.btnCancel, { backgroundColor: theme.surface }]}
                 onPress={() => setIsStoreModalVisible(false)}
