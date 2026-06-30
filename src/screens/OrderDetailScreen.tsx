@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../theme/ThemeContext';
 import { printText } from '../utils/printer';
 import { getStoreData } from '../services/storeService';
+import { cetakStrukKasir } from '../services/printReceipt'; 
 
 export default function OrderDetailScreen({ route, navigation }: any) {
   const { theme, themeMode } = useTheme();
@@ -28,8 +29,8 @@ export default function OrderDetailScreen({ route, navigation }: any) {
   const [total, setTotal] = useState<number>(initialTotal ?? 0);
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [isPrinting, setIsPrinting] = useState<boolean>(false); 
-  const [kasirName, setKasirName] = useState<string>('Memuat...'); // State baru untuk menyimpan nama kasir
+  const [isPrinting, setIsPrinting] = useState<boolean>(false);
+  const [kasirName, setKasirName] = useState<string>('Memuat...');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,7 +40,7 @@ export default function OrderDetailScreen({ route, navigation }: any) {
       }
       try {
         const order = await database.get<Order>('orders').find(orderId);
-        const fetchedItems = await order.orderItems.fetch() as any;
+        const fetchedItems = (await order.orderItems.fetch()) as any;
 
         const mappedItems = fetchedItems.map((item: any) => ({
           id: item.id,
@@ -54,15 +55,16 @@ export default function OrderDetailScreen({ route, navigation }: any) {
         const uId = order.userId || (order as any)._raw?.user_id;
         if (uId) {
           try {
-            const userRecord = await database.get('users').find(uId) as any;
+            const userRecord = (await database.get('users').find(uId)) as any;
             setKasirName(userRecord.name);
           } catch {
-            setKasirName('Kasir (ID: ' + uId.substring(0, 4).toUpperCase() + ')');
+            setKasirName(
+              'Kasir (ID: ' + uId.substring(0, 4).toUpperCase() + ')',
+            );
           }
         } else {
           setKasirName('Tidak Diketahui');
         }
-
       } catch (error) {
         console.error('Gagal mengambil data:', error);
         setItems([]);
@@ -74,7 +76,7 @@ export default function OrderDetailScreen({ route, navigation }: any) {
     fetchData();
   }, [orderId]);
 
-  const handlePrint = async () => {
+    const handlePrint = async () => {
     if (items.length === 0) return;
 
     setIsPrinting(true);
@@ -97,51 +99,48 @@ export default function OrderDetailScreen({ route, navigation }: any) {
         return;
       }
 
-      const ESC = '\u001b';
-      const initPrinter = `${ESC}@`;
-      const alignCenter = `${ESC}a\u0001`;
-      const alignLeft = `${ESC}a\u0000`;
+      // 1. Ambil detail data order tambahan dari WatermelonDB jika ada
+      let orderData: any = null;
+      try {
+        orderData = await database.get<Order>('orders').find(orderId);
+      } catch (e) {
+        console.log('Gagal mengambil detail order tambahan:', e);
+      }
 
-      let struk = '';
+      // 2. Format Waktu Transaksi secara Lokal (DD-MM-YYYY HH:mm)
+      const tglObj = orderData?.createdAt ? new Date(orderData.createdAt) : new Date();
+      const pad = (num: number) => String(num).padStart(2, '0');
+      const waktuFormatted = `${pad(tglObj.getDate())}-${pad(tglObj.getMonth() + 1)}-${tglObj.getFullYear()} ${pad(tglObj.getHours())}:${pad(tglObj.getMinutes())}`;
 
-      const store = await getStoreData();
+      // 3. Kalkulasi Data Finansial Struk (Gunakan fallback lokal jika kolom DB kosong)
+      const subtotalLokal = items.reduce((acc, item) => acc + (item.quantity * item.price), 0);
+      const subtotalVal = orderData?.subtotal || subtotalLokal;
+      
+      // Ambil nilai diskon dan pajak (Asumsi nominal, silakan sesuaikan dengan model database Anda)
+      const diskonVal = orderData?.discount || 0; 
+      const pajakVal = orderData?.tax || 0;       
+      
+      // Uang tunai yang dibayarkan dan kembaliannya
+      const tunaiVal = orderData?.amountPaid || total; 
+      const kembaliVal = tunaiVal - total > 0 ? tunaiVal - total : 0;
 
-      struk += initPrinter;
-      struk += alignCenter;
-      struk += `${store.name}\n`;
-      struk += `${store.address}\n`;
-      struk += `Telp: ${store.phone}\n`;
-      struk += '--------------------------------\n';
-
-      struk += alignLeft;
-      items.forEach(item => {
-        struk += `${item.name.slice(0, 32)}\n`;
-
-        const detailHarga = `${item.quantity} x Rp ${item.price.toLocaleString('id-ID')}`;
-        const subTotal = `Rp ${(item.quantity * item.price).toLocaleString('id-ID')}`;
-        const sisaSpasi = 32 - (detailHarga.length + subTotal.length);
-        const spasiPemisah = ' '.repeat(sisaSpasi > 0 ? sisaSpasi : 1);
-
-        struk += `${detailHarga}${spasiPemisah}${subTotal}\n`;
+      // 4. Panggil Service Cetak Baru dengan membawa data terformat
+      // Pastikan fungsi 'cetakStrukKasir' sudah Anda impor di bagian atas file ini
+      await cetakStrukKasir({
+        nota: `#${orderId?.slice(-6).toUpperCase() || 'TRX-UNKNOWN'}`,
+        kasir: kasirName,
+        waktu: waktuFormatted,
+        item: items,
+        subtotal: subtotalVal,
+        diskonNominal: diskonVal,
+        diskonPersen: orderData?.discountPercentage || undefined, // Masukkan persentase diskon jika ada
+        pajakNominal: pajakVal,
+        pajakPersen: orderData?.taxPercentage || undefined,       // Masukkan persentase pajak jika ada
+        total: total,
+        bayar: tunaiVal,
+        kembali: kembaliVal
       });
 
-      struk += '--------------------------------\n';
-
-      const teksTotalLabel = 'TOTAL AKHIR:';
-      const teksTotalHarga = `Rp ${total.toLocaleString('id-ID')}`;
-      const spasiTotal = 32 - (teksTotalLabel.length + teksTotalHarga.length);
-      struk += `${teksTotalLabel}${' '.repeat(spasiTotal > 0 ? spasiTotal : 1)}${teksTotalHarga}\n`;
-
-      struk += '\n';
-      struk += alignCenter;
-      struk += 'Terima Kasih\nAtas Kepercayaan Anda \ud83d\ude0f\n\n\n\n';
-
-      const success = await printText(printerAddress, struk);
-      if (success) {
-        Alert.alert('Sukses 🎉', 'Nota belanja sedang dicetak.');
-      } else {
-        Alert.alert('Koneksi Gagal', 'Gagal menyambungkan ke printer. Pastikan mesin menyala.');
-      }
     } catch (error) {
       console.error('Cetak Error:', error);
       Alert.alert('Error ❌', 'Terjadi gangguan koneksi bluetooth printer.');
@@ -149,12 +148,28 @@ export default function OrderDetailScreen({ route, navigation }: any) {
       setIsPrinting(false);
     }
   };
+
+
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
-      <StatusBar barStyle={themeMode === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: theme.background }]}
+      edges={['top', 'bottom']}
+    >
+      <StatusBar
+        barStyle={themeMode === 'dark' ? 'light-content' : 'dark-content'}
+        backgroundColor={theme.background}
+      />
+
       {/* HEADER UTAMA */}
-      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>Detail Transaksi 📄</Text>
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: theme.surface, borderBottomColor: theme.border },
+        ]}
+      >
+        <Text style={[styles.headerTitle, { color: theme.text }]}>
+          Detail Transaksi 📄
+        </Text>
         <Text style={[styles.headerSubtitle, { color: theme.textSecondary }]}>
           ID Pesanan: #{orderId?.slice(-6).toUpperCase() || 'N/A'}
         </Text>
@@ -163,24 +178,53 @@ export default function OrderDetailScreen({ route, navigation }: any) {
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.primary} />
-          <Text style={[styles.loadingText, { color: theme.textSecondary }]}>Memuat lembar nota...</Text>
+          <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
+            Memuat lembar nota...
+          </Text>
         </View>
       ) : (
         <View style={styles.content}>
           {/* DIGITAL RECEIPT CARD */}
-          <View style={[styles.receiptCard, { backgroundColor: theme.card, shadowColor: theme.text }]}>
-            
-            <View style={[styles.cashierInfoRow, { backgroundColor: theme.borderLight }]}>
-              <Text style={[styles.cashierLabel, { color: theme.textSecondary }]}>Kasir / Melayani :</Text>
-              <Text style={[styles.cashierValue, { color: theme.text }]}>{kasirName} 💼</Text>
+          <View
+            style={[
+              styles.receiptCard,
+              { backgroundColor: theme.card, shadowColor: theme.text },
+            ]}
+          >
+            <View
+              style={[
+                styles.cashierInfoRow,
+                { backgroundColor: theme.borderLight },
+              ]}
+            >
+              <Text
+                style={[styles.cashierLabel, { color: theme.textSecondary }]}
+              >
+                Kasir / Melayani :
+              </Text>
+              <Text style={[styles.cashierValue, { color: theme.text }]}>
+                {kasirName} 💼
+              </Text>
             </View>
 
+            {/* TABLE HEADER */}
             <View style={styles.tableHeaderRow}>
-              <Text style={[styles.tableHeaderCell, { flex: 2, color: theme.textSecondary }]}>Item</Text>
               <Text
                 style={[
                   styles.tableHeaderCell,
-                  { textAlign: 'center', flex: 0.5, color: theme.textSecondary },
+                  { flex: 2, color: theme.textSecondary },
+                ]}
+              >
+                Item
+              </Text>
+              <Text
+                style={[
+                  styles.tableHeaderCell,
+                  {
+                    textAlign: 'center',
+                    flex: 0.5,
+                    color: theme.textSecondary,
+                  },
                 ]}
               >
                 Qty
@@ -195,11 +239,15 @@ export default function OrderDetailScreen({ route, navigation }: any) {
               </Text>
             </View>
 
-            <Text style={[styles.dashedLine, { color: theme.border }]} numberOfLines={1}>
+            <Text
+              style={[styles.dashedLine, { color: theme.border }]}
+              numberOfLines={1}
+            >
               - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
               - - - - - - - - - - - - - -
             </Text>
 
+            {/* LIST ITEMS */}
             <FlatList
               data={items}
               keyExtractor={item => item.id}
@@ -207,9 +255,15 @@ export default function OrderDetailScreen({ route, navigation }: any) {
               renderItem={({ item }) => (
                 <View style={styles.itemRow}>
                   <View style={styles.itemInfoCol}>
-                    <Text style={[styles.itemName, { color: theme.text }]}>{item.name}</Text>
+                    <Text style={[styles.itemName, { color: theme.text }]}>
+                      {item.name}
+                    </Text>
                   </View>
-                  <Text style={[styles.itemQtyCol, { color: theme.textSecondary }]}>x{item.quantity}</Text>
+                  <Text
+                    style={[styles.itemQtyCol, { color: theme.textSecondary }]}
+                  >
+                    x{item.quantity}
+                  </Text>
                   <Text style={[styles.itemPriceCol, { color: theme.text }]}>
                     Rp {(item.price * item.quantity).toLocaleString('id-ID')}
                   </Text>
@@ -217,13 +271,19 @@ export default function OrderDetailScreen({ route, navigation }: any) {
               )}
             />
 
-            <Text style={[styles.dashedLine, { color: theme.border }]} numberOfLines={1}>
+            <Text
+              style={[styles.dashedLine, { color: theme.border }]}
+              numberOfLines={1}
+            >
               - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
               - - - - - - - - - - - - - - -
             </Text>
 
+            {/* TOTAL TRANSACTION */}
             <View style={styles.totalRow}>
-              <Text style={[styles.totalLabel, { color: theme.textSecondary }]}>Total Belanja</Text>
+              <Text style={[styles.totalLabel, { color: theme.textSecondary }]}>
+                Total Belanja
+              </Text>
               <Text style={[styles.totalValue, { color: theme.primary }]}>
                 Rp {total.toLocaleString('id-ID')}
               </Text>
@@ -233,7 +293,12 @@ export default function OrderDetailScreen({ route, navigation }: any) {
       )}
 
       {/* FOOTER FIX BUTTON */}
-      <View style={[styles.footer, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+      <View
+        style={[
+          styles.footer,
+          { backgroundColor: theme.surface, borderTopColor: theme.border },
+        ]}
+      >
         <TouchableOpacity
           style={[
             styles.btnPrimary,
@@ -291,7 +356,10 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
   },
-  cashierLabel: { fontSize: 13, fontWeight: '600' },
+  cashierLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
   cashierValue: { fontSize: 13, fontWeight: '800' },
   tableHeaderRow: { flexDirection: 'row', paddingVertical: 4 },
   tableHeaderCell: {
@@ -300,11 +368,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  dashedLine: {
-    marginVertical: 12,
-    opacity: 0.8,
-    letterSpacing: 1,
-  },
+  dashedLine: { marginVertical: 12, opacity: 0.8, letterSpacing: 1 },
   itemRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
   itemInfoCol: { flex: 2 },
   itemName: { fontSize: 15, fontWeight: '600' },
@@ -329,10 +393,7 @@ const styles = StyleSheet.create({
   },
   totalLabel: { fontSize: 16, fontWeight: '700' },
   totalValue: { fontSize: 24, fontWeight: '800' },
-  footer: {
-    padding: 20,
-    borderTopWidth: 1,
-  },
+  footer: { padding: 20, borderTopWidth: 1 },
   btnPrimary: {
     paddingVertical: 15,
     borderRadius: 14,
