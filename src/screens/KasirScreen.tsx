@@ -17,13 +17,15 @@ import { database } from '../database';
 import { useCartStore } from '../store/cartStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../theme/ThemeContext';
+import { logoutUser } from '../services/authService';
 import SearchIcon from '../assets/icons/Search Icon.svg';
 import CartIcon from '../assets/icons/Cart Icon.svg';
+import LogoutIcon from '../assets/icons/logout.svg';
 
 const { width } = Dimensions.get('window');
 const numColumns = width > 768 ? 3 : 2;
 
-export default function KasirScreen({ navigation }: any) {
+export default function KasirScreen({ navigation, onLogoutSuccess }: any) {
   const { theme, themeMode } = useTheme();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,6 +81,13 @@ export default function KasirScreen({ navigation }: any) {
   const handleCheckout = async () => {
     const userId = await AsyncStorage.getItem('user_id');
     navigation.navigate('Checkout', { userId: userId || 'local_user' });
+  };
+
+  const handleLogout = async () => {
+    await logoutUser();
+    if (onLogoutSuccess) {
+      onLogoutSuccess();
+    }
   };
 
   const onRefresh = useCallback(async () => {
@@ -151,6 +160,7 @@ export default function KasirScreen({ navigation }: any) {
 
       {/* HEADER */}
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+       
         <View style={styles.headerLeft}>
           <Text style={[styles.headerTitle, { color: theme.text }]}>Kasir</Text>
           <Text style={[styles.headerSubtitle, { color: theme.textSecondary }]}>Pilih produk untuk dibeli</Text>
@@ -164,6 +174,9 @@ export default function KasirScreen({ navigation }: any) {
               </View>
             )}
           </View>
+        </TouchableOpacity>
+         <TouchableOpacity style={[styles.logoutBtn, { backgroundColor: theme.dangerLight }]} onPress={handleLogout}>
+          <LogoutIcon width={20} height={20} fill={theme.danger} />
         </TouchableOpacity>
       </View>
 
@@ -240,7 +253,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
   },
-  headerLeft: { flex: 1 },
+  headerLeft: { flex: 1, marginLeft: 8 },
   headerTitle: { fontSize: 24, fontWeight: '800', letterSpacing: -0.5 },
   headerSubtitle: { fontSize: 13, marginTop: 2, fontWeight: '500' },
   cartIconBtn: { padding: 6 },
@@ -394,4 +407,9 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   payBtnText: { color: '#FFF', fontWeight: '800', fontSize: 15, letterSpacing: 0.3 },
+  logoutBtn: {
+    padding: 8,
+    borderRadius: 10,
+    marginLeft: 4,
+  },
 });
