@@ -201,7 +201,17 @@ export default function SettingScreen({ navigation }: Props) {
     setIsStoreSaving(true);
     try {
       await createOrUpdateStore(storeData.name, storeData.address, storeData.phone, storeData.ppnPercentage);
+      const updatedStore = await getStore();
+      if (updatedStore) {
+        setStoreData({
+          name: updatedStore.name,
+          address: updatedStore.address,
+          phone: updatedStore.phone,
+          ppnPercentage: Number(updatedStore.ppnPercentage) || 11,
+        });
+      }
       Alert.alert('Sukses', 'Data toko berhasil disimpan!');
+      setIsStoreModalVisible(false);
     } catch (error) {
       Alert.alert('Error', 'Gagal menyimpan data toko.');
     } finally {
