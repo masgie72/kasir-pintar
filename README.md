@@ -42,8 +42,8 @@ Aplikasi kasir berbasis React untuk mengelola transaksi penjualan, stok barang, 
 
 ## Congratulations! :tada:
 
-You've successfully run and modified your React Native App. :partying_face:
-donasi: 6285326596518
+
+donasi: 6285326596518 :partying_face:
 
 <img width="400" height="550" alt="QRCODE" src="https://github.com/user-attachments/assets/d8c93b40-c11e-4831-b42c-13caf57f7c6f" />
 
