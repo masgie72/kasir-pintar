@@ -1,16 +1,17 @@
 package com.penjualan
 
-import android.os.Bundle // 1. Pastikan impor ini ada di paling atas
+import android.os.Bundle
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
+import com.zoontek.rnbootsplash.RNBootSplash // Titik koma sudah dihapus agar standar Kotlin
 
 class MainActivity : ReactActivity() {
 
-  // 2. Kode onCreate WAJIB berada di dalam tanda kurung kurawal class MainActivity
   override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(null)
+    RNBootSplash.init(this, R.style.AppTheme) // 1. Inisialisasi splash screen di baris pertama
+    super.onCreate(null) // 2. Nilai null menjaga stabilitas react-navigation saat aplikasi di-restart sistem
   }
 
   /**
